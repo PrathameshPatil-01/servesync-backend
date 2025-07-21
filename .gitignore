@@ -1,0 +1,74 @@
+# -----------------------------
+# 🌱 Maven Specific
+# -----------------------------
+/target/
+.mvn/
+!**/src/main/**/target/
+!**/src/test/**/target/
+dependency-reduced-pom.xml
+buildNumber.properties
+release.properties
+
+# -----------------------------
+# 🧠 IntelliJ IDEA
+# -----------------------------
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# -----------------------------
+# ☕ Eclipse / STS
+# -----------------------------
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+# -----------------------------
+# 🛠️ NetBeans
+# -----------------------------
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# -----------------------------
+# 💻 VS Code
+# -----------------------------
+.vscode/
+
+# -----------------------------
+# 🔐 Environment Files
+# -----------------------------
+.env
+*.env
+
+# -----------------------------
+# 📦 Compiled Files / Output
+# -----------------------------
+*.class
+*.jar
+*.war
+*.ear
+
+# -----------------------------
+# 📄 Logs
+# -----------------------------
+*.log
+
+# -----------------------------
+# 🖥️ OS Generated Files
+# -----------------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------------
+# 📚 Project Docs (optional)
+# -----------------------------
+HELP.md
+README-template.md
