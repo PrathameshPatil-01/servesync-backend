@@ -1,4 +1,4 @@
-package com.servesync.backend;
+package com.servesync;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
