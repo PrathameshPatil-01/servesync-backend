@@ -1,81 +1,117 @@
-// ✅ AuthServiceImpl.java
 package com.servesync.service.auth;
 
+import com.servesync.dto.auth.AuthResponseDTO;
 import com.servesync.dto.auth.LoginRequestDTO;
 import com.servesync.dto.auth.RegisterRequestDTO;
-import com.servesync.dto.auth.AuthResponseDTO;
 import com.servesync.dto.user.UserResponseDTO;
-import com.servesync.entity.user.RoleType;
-import com.servesync.entity.user.UserRole;
+import com.servesync.entity.user.Role;
+import com.servesync.entity.user.User;
 import com.servesync.enums.RoleName;
-import com.servesync.repository.user.RoleTypeRepository;
+import com.servesync.exception.EmailAlreadyExistsException;
+import com.servesync.repository.user.RoleRepository;
 import com.servesync.repository.user.UserRepository;
-import com.servesync.security.JwtUtil;
+import com.servesync.security.CustomUserDetails;
+import com.servesync.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
+@Transactional
 public class AuthServiceImpl implements AuthService {
 
-	private final UserRepository userRepository;
-	private final RoleTypeRepository roleTypeRepository;
-	private final PasswordEncoder passwordEncoder;
-	private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
+    private final ModelMapper modelMapper;
 
-	@Override
-	public UserResponseDTO register(RegisterRequestDTO dto) {
-		userRepository.findByEmail(dto.getEmail()).ifPresent(existing -> {
-			throw new RuntimeException("Email already registered");
-		});
 
-		com.servesync.entity.user.User user = new com.servesync.entity.user.User();
-		user.setFirstName(dto.getFirstName());
-		user.setLastName(dto.getLastName());
-		user.setEmail(dto.getEmail());
-		user.setPhoneCountryCode("+91");
-		user.setPhoneNumber(dto.getPhoneNumber());
-		user.setPassword(passwordEncoder.encode(dto.getPassword()));
-		user.setIsDeleted(false);
+    // Register method to create a new user
+    @Override
+    public UserResponseDTO register(RegisterRequestDTO dto) {
 
-		RoleType customerRole = roleTypeRepository.findByRoleName(RoleName.CUSTOMER)
-				.orElseThrow(() -> new RuntimeException("Role not found: CUSTOMER"));
+        log.info("Attempting to register user with email: {}", dto.getEmail());
 
-		UserRole userRole = new UserRole();
-		userRole.setUser(user);
-		userRole.setRoleType(customerRole);
-		userRole.setAssignedAt(LocalDateTime.now());
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            log.warn("Registration failed: Email {} already exists", dto.getEmail());
+            throw new EmailAlreadyExistsException("Email is already registered");
+        }
 
-		user.getUserRoles().add(userRole);
-		com.servesync.entity.user.User savedUser = userRepository.save(user);
+        User user = modelMapper.map(dto, User.class);
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-		return new UserResponseDTO(savedUser.getId(), savedUser.getFirstName(), savedUser.getLastName(),
-				savedUser.getEmail(), savedUser.getPhoneNumber(), customerRole.getRoleName().name());
-	}
+        Role customerRole = roleRepository.findByRoleName(RoleName.ROLE_CUSTOMER)
+                .orElseThrow(() -> {
+                    log.error("Role {} not found in database", RoleName.ROLE_CUSTOMER);
+                    return new IllegalStateException("Default role not found");
+                });
 
-	@Override
-	public AuthResponseDTO login(LoginRequestDTO dto) {
-		com.servesync.entity.user.User user = userRepository.findByEmail(dto.getEmail())
-				.orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+        user.addRole(customerRole);
 
-		if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
-			throw new BadCredentialsException("Incorrect password");
-		}
+        try {
+            User savedUser = userRepository.save(user);
+            log.info("User registered successfully with ID: {}", savedUser.getId());
+            return modelMapper.map(savedUser, UserResponseDTO.class);
 
-		String role = user.getUserRoles().stream().map(ur -> ur.getRoleType().getRoleName().name()).findFirst()
-				.orElse(RoleName.CUSTOMER.name());
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            log.error("Registration failed due to database constraint: {}", e.getMessage());
+            throw new EmailAlreadyExistsException("Email is already registered");
+        }
+    }
 
-		UserDetails userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(),
-				user.getPassword(), List.of(() -> "ROLE_" + role));
 
-		String token = jwtUtil.generateToken(userDetails);
 
-		return new AuthResponseDTO(token, role);
-	}
+    // Login method to authenticate user and generate JWT token
+    @Override
+    public AuthResponseDTO login(LoginRequestDTO dto) {
+        log.info("Attempting to login user with email: {}", dto.getEmail());
+
+        try {
+            // Authenticate user
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
+            );
+
+            // Set authentication in SecurityContext
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Generate JWT token
+            String jwt = jwtUtils.generateJwtToken(authentication);
+            log.info("User {} logged in successfully", dto.getEmail());
+
+            // Map to AuthResponseDTO
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            return new AuthResponseDTO(
+                    jwt,
+                    userDetails.getUser().getId(),
+                    userDetails.getUsername(),
+                    userDetails.getAuthorities().stream()
+                            .map(Object::toString)
+                            .collect(Collectors.toList())
+            );
+
+        } catch (BadCredentialsException e) {
+            log.warn("Login failed for email {}: Invalid credentials", dto.getEmail());
+            throw new BadCredentialsException("Invalid email or password");
+        } catch (Exception e) {
+            log.error("Unexpected error during login for email {}: {}", dto.getEmail(), e.getMessage());
+            throw new RuntimeException("Login failed due to an unexpected error");
+        }
+    }
 }

@@ -1,9 +1,9 @@
 package com.servesync.enums;
 
 public enum RoleName {
-    CUSTOMER,
-    PROVIDER,
-    ADMIN
+    ROLE_CUSTOMER,
+    ROLE_PROVIDER,
+    ROLE_ADMIN
 }
 
 

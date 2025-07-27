@@ -1,13 +1,14 @@
 package com.servesync.dto.auth;
 
-import lombok.*;
+import lombok.Data;
 
 @Data
 public class RegisterRequestDTO {
     private String firstName;
     private String lastName;
     private String email;
-    private String password;
     private String phoneNumber;
+    private String password;
+    private String profilePic;
 }
 

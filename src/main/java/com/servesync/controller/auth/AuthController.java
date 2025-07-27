@@ -13,7 +13,7 @@ import com.servesync.service.auth.AuthService;
 import lombok.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 public class AuthController {
 

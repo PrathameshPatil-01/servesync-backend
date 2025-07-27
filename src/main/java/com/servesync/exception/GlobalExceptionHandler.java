@@ -1,5 +1,9 @@
 package com.servesync.exception;
 
+import io.jsonwebtoken.JwtException;
+import jakarta.persistence.PersistenceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,37 +17,71 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Object> handleBadCredentials(BadCredentialsException ex) {
-        return buildResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
+        logger.warn("Authentication error: {}", ex.getMessage());
+        return buildResponse("Invalid credentials", HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+        logger.warn("Registration error: {}", ex.getMessage());
+        return buildResponse(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidationErrors(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
+    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        logger.warn("Validation error: {}", ex.getMessage());
+        Map<String, Object> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage())
-        );
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+                errors.put(error.getField(), error.getDefaultMessage()));
+        return buildResponse("Validation failed", HttpStatus.BAD_REQUEST, errors);
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Object> handleRuntime(RuntimeException ex) {
-        return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(PersistenceException.class)
+    public ResponseEntity<Map<String, Object>> handlePersistenceException(PersistenceException ex) {
+        logger.error("Database error: {}", ex.getMessage());
+        return buildResponse("Database error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<Map<String, Object>> handleJwtException(JwtException ex) {
+        logger.warn("JWT error: {}", ex.getMessage());
+        return buildResponse("Invalid token", HttpStatus.UNAUTHORIZED);
+    }
+    @ExceptionHandler(JwtExpiredException.class)
+    public ResponseEntity<Map<String, Object>> handleJwtExpired(JwtExpiredException ex) {
+        logger.warn("JWT expired: {}", ex.getMessage());
+        return buildResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(InvalidJwtException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidJwt(InvalidJwtException ex) {
+        logger.warn("Invalid JWT: {}", ex.getMessage());
+        return buildResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleGeneral(Exception ex) {
-        return buildResponse("Unexpected error occurred.", HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+        logger.error("Unexpected error: {}", ex.getMessage(), ex);
+        return buildResponse("Unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    private ResponseEntity<Object> buildResponse(String message, HttpStatus status) {
+    private ResponseEntity<Map<String, Object>> buildResponse(String message, HttpStatus status) {
+        return buildResponse(message, status, null);
+    }
+
+    private ResponseEntity<Map<String, Object>> buildResponse(String message, HttpStatus status, Map<String, Object> additionalData) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", status.value());
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
+        if (additionalData != null) {
+            body.put("errors", additionalData);
+        }
         return new ResponseEntity<>(body, status);
     }
 }
