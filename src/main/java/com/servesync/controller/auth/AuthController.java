@@ -7,13 +7,12 @@ import com.servesync.dto.auth.AuthResponseDTO;
 import com.servesync.dto.auth.LoginRequestDTO;
 import com.servesync.dto.auth.RegisterRequestDTO;
 import com.servesync.dto.user.UserResponseDTO;
-import com.servesync.entity.user.User;
 import com.servesync.service.auth.AuthService;
 
 import lombok.*;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class AuthController {
 

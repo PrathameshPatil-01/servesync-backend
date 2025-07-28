@@ -1,6 +1,5 @@
 package com.servesync.dto.auth;
 
-import lombok.Data;
 import lombok.*;
 
 import java.util.List;
@@ -9,12 +8,10 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-
+@Builder
 public class AuthResponseDTO {
-    private String jwt;
+    private String token;              // was 'jwt' before
     private Long userId;
     private String email;
-    private List<String> authorities;
+    private List<String> roles;       // was 'authorities' before
 }
-

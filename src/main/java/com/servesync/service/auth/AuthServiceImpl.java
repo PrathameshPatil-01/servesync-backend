@@ -15,6 +15,7 @@ import com.servesync.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,8 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,15 +40,16 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtils jwtUtils;
     private final ModelMapper modelMapper;
 
-
-    // Register method to create a new user
+    /**
+     * Registers a new user with default CUSTOMER role.
+     */
     @Override
     public UserResponseDTO register(RegisterRequestDTO dto) {
+        final String email = dto.getEmail();
+        log.info("Registering user with email: {}", email);
 
-        log.info("Attempting to register user with email: {}", dto.getEmail());
-
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            log.warn("Registration failed: Email {} already exists", dto.getEmail());
+        if (userRepository.existsByEmail(email)) {
+            log.warn("Email already registered: {}", email);
             throw new EmailAlreadyExistsException("Email is already registered");
         }
 
@@ -58,59 +58,57 @@ public class AuthServiceImpl implements AuthService {
 
         Role customerRole = roleRepository.findByRoleName(RoleName.ROLE_CUSTOMER)
                 .orElseThrow(() -> {
-                    log.error("Role {} not found in database", RoleName.ROLE_CUSTOMER);
-                    return new IllegalStateException("Default role not found");
+                    log.error("Default role {} not found", RoleName.ROLE_CUSTOMER);
+                    return new IllegalStateException("Default user role not found in the database");
                 });
 
         user.addRole(customerRole);
 
         try {
             User savedUser = userRepository.save(user);
-            log.info("User registered successfully with ID: {}", savedUser.getId());
+            log.info("User registered successfully: id={}, email={}", savedUser.getId(), savedUser.getEmail());
             return modelMapper.map(savedUser, UserResponseDTO.class);
-
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            log.error("Registration failed due to database constraint: {}", e.getMessage());
+        } catch (DataIntegrityViolationException e) {
+            log.error("Registration failed - data integrity violation: {}", e.getMessage());
             throw new EmailAlreadyExistsException("Email is already registered");
         }
     }
 
-
-
-    // Login method to authenticate user and generate JWT token
+    /**
+     * Authenticates user and generates JWT token.
+     */
     @Override
     public AuthResponseDTO login(LoginRequestDTO dto) {
-        log.info("Attempting to login user with email: {}", dto.getEmail());
+        final String email = dto.getEmail();
+        log.info("Logging in user with email: {}", email);
 
         try {
-            // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
+                    new UsernamePasswordAuthenticationToken(email, dto.getPassword())
             );
 
-            // Set authentication in SecurityContext
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Generate JWT token
             String jwt = jwtUtils.generateJwtToken(authentication);
-            log.info("User {} logged in successfully", dto.getEmail());
-
-            // Map to AuthResponseDTO
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            return new AuthResponseDTO(
-                    jwt,
-                    userDetails.getUser().getId(),
-                    userDetails.getUsername(),
-                    userDetails.getAuthorities().stream()
+            User user = userDetails.getUser();
+
+            log.info("Login successful for user: {}", email);
+
+            return AuthResponseDTO.builder()
+                    .token(jwt)
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .roles(userDetails.getAuthorities().stream()
                             .map(Object::toString)
-                            .collect(Collectors.toList())
-            );
+                            .collect(Collectors.toList()))
+                    .build();
 
         } catch (BadCredentialsException e) {
-            log.warn("Login failed for email {}: Invalid credentials", dto.getEmail());
+            log.warn("Invalid login attempt for email: {}", email);
             throw new BadCredentialsException("Invalid email or password");
         } catch (Exception e) {
-            log.error("Unexpected error during login for email {}: {}", dto.getEmail(), e.getMessage());
+            log.error("Login failed for email: {} due to: {}", email, e.getMessage());
             throw new RuntimeException("Login failed due to an unexpected error");
         }
     }

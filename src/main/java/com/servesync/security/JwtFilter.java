@@ -29,17 +29,17 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String headerValue = request.getHeader("Authorization");
-        
+
         if (headerValue != null && headerValue.startsWith(tokenPrefix)) {
-        	
+
             try {
                 String jwt = headerValue.substring(tokenPrefix.length());
                 Authentication authentication = jwtUtils.populateAuthenticationTokenFromJWT(jwt);
-                
+
                 log.debug("Populated authentication for JWT: {}", authentication);
-                
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                
+
             } catch (JwtException e) {
                 log.warn("Invalid JWT token: {}", e.getMessage());
                 SecurityContextHolder.clearContext();
@@ -51,7 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/users/register") || path.startsWith("/users/login") ||
+        return path.startsWith("/api/users/register") || path.startsWith("/api/users/login") ||
                path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs");
     }
 }

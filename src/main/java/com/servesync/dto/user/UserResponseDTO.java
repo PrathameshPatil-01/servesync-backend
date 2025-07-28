@@ -8,12 +8,12 @@ import java.util.Set;
 import com.servesync.dto.base.BaseDTO;
 
 @Data
-public class UserResponseDTO extends BaseDTO{
-    private Long id;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String phoneNumber;
-    private String profilePic;
-    private Set<RoleDTO> roles = new HashSet<>();
+public class UserResponseDTO extends BaseDTO {
+	private Long id;
+	private String firstName;
+	private String lastName;
+	private String email;
+	private String phoneNumber;
+	private String profilePic;
+	private Set<RoleDTO> roles;
 }
