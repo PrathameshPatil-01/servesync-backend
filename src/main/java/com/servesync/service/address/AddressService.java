@@ -1,8 +1,21 @@
 package com.servesync.service.address;
 
+
+
+import java.util.List;
+
+import com.servesync.dto.user.AddressRequestDTO;
+import com.servesync.dto.user.AddressResponseDTO;
+
 public interface AddressService {
-    List<AddressResponse> getAddressesByUser(Long userId);
-    AddressResponse addAddress(Long userId, AddressRequest dto);
-    AddressResponse updateAddress(Long addressId, AddressRequest dto);
-    void deleteAddress(Long addressId);
+
+    AddressResponseDTO addAddressForUser(Long userId, AddressRequestDTO dto);
+
+    AddressResponseDTO getAddressById(Long id);
+
+    List<AddressResponseDTO> getAllAddressesForUser(Long userId);
+
+    AddressResponseDTO updateAddress(Long id, AddressRequestDTO dto);
+
+    String deleteAddress(Long id);
 }

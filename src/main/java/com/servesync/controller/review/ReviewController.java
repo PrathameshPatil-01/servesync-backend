@@ -1,51 +1,50 @@
 package com.servesync.controller.review;
 
-import com.servesync.dto.user.*;
-import com.servesync.dto.address.*;
-import com.servesync.dto.booking.*;
-import com.servesync.dto.payment.*;
-import com.servesync.dto.review.*;
-import com.servesync.dto.provider.*;
-import com.servesync.dto.verification.*;
-import com.servesync.dto.audit.*;
-import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
+import com.servesync.dto.review.ReviewRequestDTO;
+import com.servesync.dto.review.ReviewResponseDTO;
+import com.servesync.service.review.ReviewService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/reviews")
+@RequestMapping("/reviews")
 @RequiredArgsConstructor
-@Validated
 public class ReviewController {
 
+    private final ReviewService reviewService;
+
+    @PostMapping
+    public ResponseEntity<ReviewResponseDTO> addReview(@RequestBody ReviewRequestDTO dto) {
+        return ResponseEntity.ok(reviewService.addReview(dto));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ReviewResponseDTO> getReviewById(@PathVariable Long id) {
+        return ResponseEntity.ok(reviewService.getReviewById(id));
+    }
+
     @GetMapping("/booking/{bookingId}")
-    @Operation(summary = "Get reviews for a booking")
-    public ResponseEntity<List<ReviewResponse>> getReviewsForBooking(@PathVariable Long bookingId) {
-        return ResponseEntity.ok(List.of());
+    public ResponseEntity<List<ReviewResponseDTO>> getReviewsByBooking(@PathVariable Long bookingId) {
+        return ResponseEntity.ok(reviewService.getReviewsByBooking(bookingId));
     }
 
-    @PostMapping("/booking/{bookingId}/reviewer/{reviewerId}")
-    @Operation(summary = "Add review for booking")
-    public ResponseEntity<ReviewResponse> addReview(@PathVariable Long bookingId, @PathVariable Long reviewerId, @RequestBody @Valid ReviewRequest dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ReviewResponse());
+    @GetMapping("/reviewee/{revieweeId}")
+    public ResponseEntity<List<ReviewResponseDTO>> getReviewsByReviewee(@PathVariable Long revieweeId) {
+        return ResponseEntity.ok(reviewService.getReviewsByReviewee(revieweeId));
     }
 
-    @PutMapping("/{reviewId}")
-    @Operation(summary = "Update review")
-    public ResponseEntity<ReviewResponse> updateReview(@PathVariable Long reviewId, @RequestBody @Valid ReviewRequest dto) {
-        return ResponseEntity.ok(new ReviewResponse());
+    @PutMapping("/{id}")
+    public ResponseEntity<ReviewResponseDTO> updateReview(
+            @PathVariable Long id,
+            @RequestBody ReviewRequestDTO dto) {
+        return ResponseEntity.ok(reviewService.updateReview(id, dto));
     }
 
-    @DeleteMapping("/{reviewId}")
-    @Operation(summary = "Delete review")
-    public ResponseEntity<String> deleteReview(@PathVariable Long reviewId) {
-        return ResponseEntity.ok("Review deleted");
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteReview(@PathVariable Long id) {
+        return ResponseEntity.ok(reviewService.deleteReview(id));
     }
 }

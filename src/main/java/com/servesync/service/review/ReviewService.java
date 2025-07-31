@@ -1,8 +1,15 @@
 package com.servesync.service.review;
 
+import com.servesync.dto.review.ReviewRequestDTO;
+import com.servesync.dto.review.ReviewResponseDTO;
+
+import java.util.List;
+
 public interface ReviewService {
-    List<ReviewResponse> getReviewsForBooking(Long bookingId);
-    ReviewResponse addReview(Long bookingId, Long reviewerId, ReviewRequest dto);
-    ReviewResponse updateReview(Long reviewId, ReviewRequest dto);
-    void deleteReview(Long reviewId);
+    //ReviewResponseDTO addReview(ReviewRequestDTO dto);
+    ReviewResponseDTO getReviewById(Long id);
+    List<ReviewResponseDTO> getReviewsByBooking(Long bookingId);
+    List<ReviewResponseDTO> getReviewsByReviewee(Long revieweeId);
+    ReviewResponseDTO updateReview(Long id, ReviewRequestDTO dto);
+    String deleteReview(Long id);
 }
