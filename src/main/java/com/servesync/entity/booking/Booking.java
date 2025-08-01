@@ -1,8 +1,8 @@
 package com.servesync.entity.booking;
 
+import com.servesync.entity.address.Address;
 import com.servesync.entity.base.BaseEntityWithId;
 import com.servesync.entity.provider.ProviderService;
-import com.servesync.entity.user.Address;
 import com.servesync.entity.user.User;
 import com.servesync.enums.BookingStatusEnum;
 

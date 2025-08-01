@@ -1,6 +1,8 @@
-package com.servesync.entity.user;
+package com.servesync.entity.address;
 
 import com.servesync.entity.base.BaseEntityWithId;
+import com.servesync.entity.user.User;
+
 import jakarta.persistence.*;
 import lombok.*;
 

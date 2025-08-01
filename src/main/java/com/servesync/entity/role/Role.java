@@ -1,4 +1,4 @@
-package com.servesync.entity.user;
+package com.servesync.entity.role;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import com.servesync.entity.user.User;
 import com.servesync.enums.RoleName;
 
 @Entity

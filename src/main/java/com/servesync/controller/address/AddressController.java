@@ -1,7 +1,7 @@
 package com.servesync.controller.address;
 
-import com.servesync.dto.user.AddressRequestDTO;
-import com.servesync.dto.user.AddressResponseDTO;
+import com.servesync.dto.address.AddressRequestDTO;
+import com.servesync.dto.address.AddressResponseDTO;
 import com.servesync.service.address.AddressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

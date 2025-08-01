@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.servesync.dto.base.BaseDTO;
+import com.servesync.dto.role.RoleDTO;
 
 @Data
 public class UserResponseDTO extends BaseDTO {

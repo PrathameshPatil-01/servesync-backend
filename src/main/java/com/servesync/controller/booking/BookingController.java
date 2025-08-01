@@ -1,20 +1,13 @@
 package com.servesync.controller.booking;
 
-import com.servesync.dto.user.*;
-import com.servesync.dto.address.*;
-import com.servesync.dto.booking.*;
-import com.servesync.dto.payment.*;
-import com.servesync.dto.review.*;
-import com.servesync.dto.provider.*;
-import com.servesync.dto.verification.*;
-import com.servesync.dto.audit.*;
+import com.servesync.dto.booking.BookingRequestDTO;
+import com.servesync.dto.booking.BookingResponseDTO;
+import com.servesync.service.booking.BookingService;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,36 +15,39 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
-@Validated
 public class BookingController {
 
-    @GetMapping
-    @Operation(summary = "Get all bookings")
-    public ResponseEntity<List<BookingResponse>> getAllBookings() {
-        return ResponseEntity.ok(List.of());
+	@Autowired
+    private final BookingService bookingService;
+
+    @PostMapping
+    @Operation(summary = "Create a booking")
+    public ResponseEntity<BookingResponseDTO> createBooking(@RequestBody BookingRequestDTO dto) {
+        return ResponseEntity.ok(bookingService.createBooking(dto));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get booking by ID")
-    public ResponseEntity<BookingResponse> getBooking(@PathVariable Long id) {
-        return ResponseEntity.ok(new BookingResponse());
+    @Operation(summary = "Get a booking by ID")
+    public ResponseEntity<BookingResponseDTO> getBookingById(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.getBookingById(id));
     }
 
-    @PostMapping
-    @Operation(summary = "Create booking")
-    public ResponseEntity<BookingResponse> createBooking(@RequestBody @Valid BookingRequest dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(new BookingResponse());
+    @GetMapping
+    @Operation(summary = "Get all bookings")
+    public ResponseEntity<List<BookingResponseDTO>> getAllBookings() {
+        return ResponseEntity.ok(bookingService.getAllBookings());
     }
 
-    @PutMapping("/{id}/status")
-    @Operation(summary = "Update booking status")
-    public ResponseEntity<String> updateBookingStatus(@PathVariable Long id, @RequestParam String status) {
-        return ResponseEntity.ok("Booking status updated");
+    @PutMapping("/{id}")
+    @Operation(summary = "Update a booking")
+    public ResponseEntity<BookingResponseDTO> updateBooking(@PathVariable Long id, @RequestBody BookingRequestDTO dto) {
+        return ResponseEntity.ok(bookingService.updateBooking(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Cancel booking")
-    public ResponseEntity<String> cancelBooking(@PathVariable Long id) {
-        return ResponseEntity.ok("Booking cancelled");
+    @Operation(summary = "Delete a booking")
+    public ResponseEntity<Void> deleteBooking(@PathVariable Long id) {
+        bookingService.deleteBooking(id);
+        return ResponseEntity.noContent().build();
     }
 }

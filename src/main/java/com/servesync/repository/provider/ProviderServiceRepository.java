@@ -7,7 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.servesync.entity.provider.ProviderService;
 
 public interface ProviderServiceRepository extends JpaRepository<ProviderService, Long> {
-	Optional<ProviderService> findByName(String name);
-	boolean existsByName(String name);
 
 }

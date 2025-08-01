@@ -1,6 +1,6 @@
 package com.servesync.security;
 
-import com.servesync.entity.user.Role;
+import com.servesync.entity.role.Role;
 import com.servesync.entity.user.User;
 import com.servesync.enums.RoleName;
 import org.junit.jupiter.api.Test;

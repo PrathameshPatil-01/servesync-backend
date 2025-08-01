@@ -1,7 +1,9 @@
-package com.servesync.repository.user;
+package com.servesync.repository.address;
 
-import com.servesync.entity.user.Address;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.servesync.entity.address.Address;
+
 import java.util.List;
 
 public interface AddressRepository extends JpaRepository<Address, Long> {

@@ -4,8 +4,8 @@ package com.servesync.service.address;
 
 import java.util.List;
 
-import com.servesync.dto.user.AddressRequestDTO;
-import com.servesync.dto.user.AddressResponseDTO;
+import com.servesync.dto.address.AddressRequestDTO;
+import com.servesync.dto.address.AddressResponseDTO;
 
 public interface AddressService {
 

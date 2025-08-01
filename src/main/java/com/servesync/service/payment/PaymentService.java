@@ -1,8 +1,11 @@
 package com.servesync.service.payment;
 
+import com.servesync.dto.payment.PaymentRequestDTO;
+import com.servesync.dto.payment.PaymentResponseDTO;
+
 public interface PaymentService {
-    PaymentResponse getPaymentById(Long id);
-    PaymentResponse createPayment(PaymentRequest dto);
-    void updatePaymentStatus(Long id, String status);
-    PaymentResponse getPaymentByBooking(Long bookingId);
+    PaymentResponseDTO getPaymentById(Long id);
+    PaymentResponseDTO createPayment(PaymentRequestDTO request);
+    PaymentResponseDTO updatePaymentStatus(Long id, String status);
+    PaymentResponseDTO getPaymentByBookingId(Long bookingId);
 }

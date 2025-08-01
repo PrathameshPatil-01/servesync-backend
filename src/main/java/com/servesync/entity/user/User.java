@@ -3,7 +3,9 @@ package com.servesync.entity.user;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.servesync.entity.address.Address;
 import com.servesync.entity.base.BaseEntity;
+import com.servesync.entity.role.Role;
 import com.servesync.enums.RoleName;
 
 import jakarta.persistence.*;

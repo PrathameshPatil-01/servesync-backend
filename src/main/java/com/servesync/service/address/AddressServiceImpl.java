@@ -1,10 +1,11 @@
 package com.servesync.service.address;
 
-import com.servesync.dto.user.AddressRequestDTO;
-import com.servesync.dto.user.AddressResponseDTO;
-import com.servesync.entity.user.Address;
+import com.servesync.dto.address.AddressRequestDTO;
+import com.servesync.dto.address.AddressResponseDTO;
+import com.servesync.entity.address.Address;
 import com.servesync.entity.user.User;
 import com.servesync.exception.ResourceNotFoundException;
+import com.servesync.repository.address.AddressRepository;
 import com.servesync.repository.user.*;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;

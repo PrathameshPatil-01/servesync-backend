@@ -1,4 +1,4 @@
-package com.servesync.dto.user;
+package com.servesync.dto.address;
 import lombok.Getter;
 import lombok.Setter;
 

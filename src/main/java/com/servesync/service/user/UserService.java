@@ -1,9 +1,12 @@
 package com.servesync.service.user;
 
+import com.servesync.dto.user.UserCreateDTO;
+import com.servesync.dto.user.UserResponseDTO;
+import java.util.List;
+
 public interface UserService {
-    List<UserResponse> getAllUsers();
-    UserResponse getUserById(Long id);
-    UserResponse createUser(CreateUserRequest dto);
-    UserResponse updateUser(Long id, UpdateUserRequest dto);
+    UserResponseDTO createUser(UserCreateDTO dto);
+    List<UserResponseDTO> getAllUsers();
+    UserResponseDTO getUserById(Long id);
     void deleteUser(Long id);
 }
