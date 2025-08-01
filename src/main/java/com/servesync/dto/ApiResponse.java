@@ -1,12 +1,19 @@
 package com.servesync.dto;
 
-import lombok.AllArgsConstructor;
+import java.time.LocalDateTime;
+
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class ApiResponse {
-    private String message;
+	private LocalDateTime timeStamp;
+	private String message;
+
+	public ApiResponse(String message) {
+		this.timeStamp = LocalDateTime.now();
+		this.message = message;
+	}
+
 }
