@@ -20,19 +20,25 @@ public class ServiceProvider extends BaseEntityWithId {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Column(name = "business_name", nullable = false)
-    private String businessName;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
-    @Column(name = "business_reg_number")
-    private String businessRegNumber;
+    @Column(name = "aadhar_number", unique = true)
+    private String aadharNumber;
 
-    @Column(name = "business_tax_id")
-    private String businessTaxId;
+    @Column(name = "pan_number", unique = true)
+    private String panNumber;
+
+    private String skills;
 
     private String description;
 
     @Column(name = "years_of_experience", nullable = false)
     private Integer yearsOfExperience = 0;
+
+    @Lob
+    @Column(name = "profile_image", columnDefinition = "LONGBLOB")
+    private byte[] profileImage;
 
     @OneToMany(mappedBy = "provider", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProviderService> providerServices = new HashSet<>();

@@ -8,15 +8,18 @@ import lombok.*;
 @AllArgsConstructor
 public class ServiceProviderUpdateDTO {
 
-    @NotBlank(message = "Business name is required")
-    @Size(min = 2, max = 100, message = "Business name must be between 2 and 100 characters")
-    private String businessName;
+    @NotBlank(message = "Full name is required")
+    @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")
+    private String fullName;
 
-    @Size(max = 50, message = "Business registration number can't exceed 50 characters")
-    private String businessRegNumber;
+    @Size(min = 12, max = 12, message = "Aadhar number must be exactly 12 digits")
+    private String aadharNumber;
 
-    @Size(max = 50, message = "Business tax ID can't exceed 50 characters")
-    private String businessTaxId;
+    @Size(min = 10, max = 10, message = "PAN number must be exactly 10 characters")
+    private String panNumber;
+
+    @Size(max = 200, message = "Skills can't exceed 200 characters")
+    private String skills;
 
     @Size(max = 500, message = "Description can't exceed 500 characters")
     private String description;
@@ -25,4 +28,6 @@ public class ServiceProviderUpdateDTO {
     @Min(value = 0, message = "Years of experience must be 0 or more")
     @Max(value = 100, message = "Years of experience must be reasonable (max 100)")
     private Integer yearsOfExperience;
+
+    private String profileImage; // Base64-encoded image string
 }

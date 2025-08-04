@@ -10,10 +10,15 @@ import java.util.Set;
 public class ServiceProviderDTO {
     private Long id;
     private Long userId;
-    private String businessName;
-    private String businessRegNumber;
-    private String businessTaxId;
+
+    private String fullName;
+    private String aadharNumber;
+    private String panNumber;
+    private String skills;
     private String description;
     private Integer yearsOfExperience;
+
+    private String profileImage; // Base64-encoded string for the image
+
     private Set<ProviderServiceDTO> providerServices;
 }

@@ -1,12 +1,7 @@
 package com.servesync.service.provider;
 
-import com.servesync.dto.provider.ProviderServiceCreateDTO;
-import com.servesync.dto.provider.ProviderServiceDTO;
-import com.servesync.dto.provider.ServiceProviderCreateDTO;
-import com.servesync.dto.provider.ServiceProviderDTO;
-import com.servesync.dto.provider.ServiceProviderUpdateDTO;
-import com.servesync.entity.provider.ProviderService;
-import com.servesync.entity.provider.ServiceProvider;
+import com.servesync.dto.provider.*;
+import com.servesync.entity.provider.*;
 import com.servesync.entity.service.SubService;
 import com.servesync.entity.user.User;
 import com.servesync.exception.ApiException;
@@ -14,12 +9,12 @@ import com.servesync.exception.ResourceNotFoundException;
 import com.servesync.repository.provider.ServiceProviderRepository;
 import com.servesync.repository.service.SubServiceRepository;
 import com.servesync.repository.user.UserRepository;
-
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,79 +23,105 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ServiceProviderServiceImpl implements ServiceProviderService {
 
-	private final ServiceProviderRepository serviceProviderRepository;
-	private final SubServiceRepository subServiceRepository;
-	private final UserRepository userRepo;
-	private final ModelMapper mapper;
+    private final ServiceProviderRepository serviceProviderRepository;
+    private final SubServiceRepository subServiceRepository;
+    private final UserRepository userRepo;
+    private final ModelMapper mapper;
 
-	@Override
-	public List<ServiceProviderDTO> getAllProviders() {
-		return serviceProviderRepository.findAll().stream()
-				.map(provider -> mapper.map(provider, ServiceProviderDTO.class)).collect(Collectors.toList());
-	}
+    @Override
+    public List<ServiceProviderDTO> getAllProviders() {
+        return serviceProviderRepository.findAll().stream().map(provider -> {
+            ServiceProviderDTO dto = mapper.map(provider, ServiceProviderDTO.class);
+            if (provider.getProfileImage() != null) {
+                dto.setProfileImage(Base64.getEncoder().encodeToString(provider.getProfileImage()));
+            }
+            return dto;
+        }).collect(Collectors.toList());
+    }
 
-	@Override
-	public ServiceProviderDTO getProviderById(Long id) {
-		ServiceProvider provider = serviceProviderRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Invalid ServiceProvider ID"));
-		return mapper.map(provider, ServiceProviderDTO.class);
-	}
+    @Override
+    public ServiceProviderDTO getProviderById(Long id) {
+        ServiceProvider provider = serviceProviderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid ServiceProvider ID"));
 
-	@Override
-	public ServiceProviderDTO addProvider(ServiceProviderCreateDTO dto) {
-		// Check if user already has a provider
-		if (serviceProviderRepository.existsByUserId(dto.getUserId()))
-			throw new ApiException("Provider already exists for this user");
+        ServiceProviderDTO dto = mapper.map(provider, ServiceProviderDTO.class);
+        if (provider.getProfileImage() != null) {
+            dto.setProfileImage(Base64.getEncoder().encodeToString(provider.getProfileImage()));
+        }
+        return dto;
+    }
 
-		User user = userRepo.findById(dto.getUserId())
-				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    @Override
+    public ServiceProviderDTO addProvider(ServiceProviderCreateDTO dto) {
+        if (serviceProviderRepository.existsByUserId(dto.getUserId())) {
+            throw new ApiException("Provider already exists for this user");
+        }
 
-		ServiceProvider entity = mapper.map(dto, ServiceProvider.class);
-		entity.setUser(user);
-		ServiceProvider saved = serviceProviderRepository.save(entity);
+        User user = userRepo.findById(dto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-		return mapper.map(saved, ServiceProviderDTO.class);
-	}
+        ServiceProvider entity = mapper.map(dto, ServiceProvider.class);
+        entity.setUser(user);
 
-	@Override
-	public ServiceProviderDTO updateProvider(Long id, ServiceProviderUpdateDTO dto) {
-		ServiceProvider provider = serviceProviderRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Provider not found"));
+        if (dto.getProfileImage() != null) {
+            entity.setProfileImage(Base64.getDecoder().decode(dto.getProfileImage()));
+        }
 
-		mapper.map(dto, provider); // Partial or full update
-		ServiceProvider updated = serviceProviderRepository.save(provider);
-		return mapper.map(updated, ServiceProviderDTO.class);
-	}
+        ServiceProvider saved = serviceProviderRepository.save(entity);
 
-	@Override
-	public void deleteProvider(Long id) {
-		ServiceProvider provider = serviceProviderRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Provider not found"));
-		serviceProviderRepository.delete(provider); // Hard delete (change to soft if needed)
-	}
+        ServiceProviderDTO responseDTO = mapper.map(saved, ServiceProviderDTO.class);
+        if (saved.getProfileImage() != null) {
+            responseDTO.setProfileImage(Base64.getEncoder().encodeToString(saved.getProfileImage()));
+        }
+        return responseDTO;
+    }
 
-	@Override
-	public ProviderServiceDTO addProviderServiceToProvider(Long providerId, ProviderServiceCreateDTO dto) {
+    @Override
+    public ServiceProviderDTO updateProvider(Long id, ServiceProviderUpdateDTO dto) {
+        ServiceProvider provider = serviceProviderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Provider not found"));
 
-		ServiceProvider provider = serviceProviderRepository.findById(providerId)
-				.orElseThrow(() -> new ResourceNotFoundException("Provider not found with ID: " + providerId));
+        mapper.map(dto, provider);
 
-		SubService subService = subServiceRepository.findById(dto.getSubServiceId()).orElseThrow(
-				() -> new ResourceNotFoundException("SubService not found with ID: " + dto.getSubServiceId()));
+        if (dto.getProfileImage() != null) {
+            provider.setProfileImage(Base64.getDecoder().decode(dto.getProfileImage()));
+        }
 
-		boolean alreadyExists = provider.getProviderServices().stream()
-				.anyMatch(ps -> ps.getSubService().getId().equals(subService.getId()));
-		if (alreadyExists) {
-			throw new IllegalArgumentException("Provider already offers this sub-service.");
-		}
+        ServiceProvider updated = serviceProviderRepository.save(provider);
+        ServiceProviderDTO responseDTO = mapper.map(updated, ServiceProviderDTO.class);
+        if (updated.getProfileImage() != null) {
+            responseDTO.setProfileImage(Base64.getEncoder().encodeToString(updated.getProfileImage()));
+        }
+        return responseDTO;
+    }
 
-		ProviderService providerService = mapper.map(dto, ProviderService.class);
+    @Override
+    public void deleteProvider(Long id) {
+        ServiceProvider provider = serviceProviderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Provider not found"));
+        serviceProviderRepository.delete(provider);
+    }
 
-		provider.addProviderService(providerService); // set bidirectional mapping
+    @Override
+    public ProviderServiceDTO addProviderServiceToProvider(Long providerId, ProviderServiceCreateDTO dto) {
+        ServiceProvider provider = serviceProviderRepository.findById(providerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Provider not found with ID: " + providerId));
 
-		// 5. Save provider (cascades providerService)
-		serviceProviderRepository.save(provider);
+        SubService subService = subServiceRepository.findById(dto.getSubServiceId()).orElseThrow(
+                () -> new ResourceNotFoundException("SubService not found with ID: " + dto.getSubServiceId()));
 
-		return mapper.map(providerService, ProviderServiceDTO.class);
-	}
+        boolean alreadyExists = provider.getProviderServices().stream()
+                .anyMatch(ps -> ps.getSubService().getId().equals(subService.getId()));
+
+        if (alreadyExists) {
+            throw new IllegalArgumentException("Provider already offers this sub-service.");
+        }
+
+        ProviderService providerService = mapper.map(dto, ProviderService.class);
+        provider.addProviderService(providerService);
+
+        serviceProviderRepository.save(provider);
+
+        return mapper.map(providerService, ProviderServiceDTO.class);
+    }
 }
