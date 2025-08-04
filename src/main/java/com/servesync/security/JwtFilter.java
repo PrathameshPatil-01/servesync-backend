@@ -29,6 +29,8 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String headerValue = request.getHeader("Authorization");
+        
+        // Log the incoming request URI and Authorization header for debugging
 
         if (headerValue != null && headerValue.startsWith(tokenPrefix)) {
 
@@ -48,6 +50,7 @@ public class JwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    // This method determines which requests should not be filtered by this JWT filter.
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();

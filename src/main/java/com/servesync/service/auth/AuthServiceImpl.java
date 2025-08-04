@@ -1,13 +1,14 @@
 package com.servesync.service.auth;
 
-import com.servesync.dto.auth.AuthResponseDTO;
 import com.servesync.dto.auth.LoginRequestDTO;
+import com.servesync.dto.auth.LoginResponseDTO;
 import com.servesync.dto.auth.RegisterRequestDTO;
-import com.servesync.dto.user.UserResponseDTO;
+import com.servesync.dto.auth.RegisterResponseDTO;
 import com.servesync.entity.role.Role;
 import com.servesync.entity.user.User;
 import com.servesync.enums.RoleName;
 import com.servesync.exception.EmailAlreadyExistsException;
+import com.servesync.exception.UserRoleNotFoundException;
 import com.servesync.repository.role.RoleRepository;
 import com.servesync.repository.user.UserRepository;
 import com.servesync.security.CustomUserDetails;
@@ -44,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
      * Registers a new user with default CUSTOMER role.
      */
     @Override
-    public UserResponseDTO register(RegisterRequestDTO dto) {
+    public RegisterResponseDTO register(RegisterRequestDTO dto) {
         final String email = dto.getEmail();
         log.info("Registering user with email: {}", email);
 
@@ -56,29 +57,29 @@ public class AuthServiceImpl implements AuthService {
         User user = modelMapper.map(dto, User.class);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        Role customerRole = roleRepository.findByRoleName(RoleName.ROLE_CUSTOMER)
-                .orElseThrow(() -> {
-                    log.error("Default role {} not found", RoleName.ROLE_CUSTOMER);
-                    return new IllegalStateException("Default user role not found in the database");
-                });
+        RoleName requestedRole = dto.getRole() != null ? dto.getRole() : RoleName.ROLE_CUSTOMER;
 
-        user.addRole(customerRole);
+        Role role = roleRepository.findByRoleName(requestedRole)
+                .orElseThrow(() -> new UserRoleNotFoundException("User role not found in the database"));
+
+        user.addRole(role);
 
         try {
             User savedUser = userRepository.save(user);
             log.info("User registered successfully: id={}, email={}", savedUser.getId(), savedUser.getEmail());
-            return modelMapper.map(savedUser, UserResponseDTO.class);
+            return modelMapper.map(savedUser, RegisterResponseDTO.class);
         } catch (DataIntegrityViolationException e) {
             log.error("Registration failed - data integrity violation: {}", e.getMessage());
             throw new EmailAlreadyExistsException("Email is already registered");
         }
     }
 
+
     /**
      * Authenticates user and generates JWT token.
      */
     @Override
-    public AuthResponseDTO login(LoginRequestDTO dto) {
+    public LoginResponseDTO login(LoginRequestDTO dto) {
         final String email = dto.getEmail();
         log.info("Logging in user with email: {}", email);
 
@@ -95,9 +96,13 @@ public class AuthServiceImpl implements AuthService {
 
             log.info("Login successful for user: {}", email);
 
-            return AuthResponseDTO.builder()
+            return LoginResponseDTO.builder()
                     .token(jwt)
                     .userId(user.getId())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .phoneNumber(user.getPhoneNumber())
+                    .profilePic(user.getProfilePic())
                     .email(user.getEmail())
                     .roles(userDetails.getAuthorities().stream()
                             .map(Object::toString)

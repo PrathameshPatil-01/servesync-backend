@@ -1,13 +1,12 @@
 package com.servesync.service.auth;
 
-import com.servesync.dto.auth.AuthResponseDTO;
+import com.servesync.dto.auth.LoginResponseDTO;
 import com.servesync.dto.auth.LoginRequestDTO;
 import com.servesync.dto.auth.RegisterRequestDTO;
-import com.servesync.dto.user.UserResponseDTO;
-import com.servesync.entity.user.User;
+import com.servesync.dto.auth.RegisterResponseDTO;
 
 public interface AuthService {
-    UserResponseDTO register(RegisterRequestDTO dto);
-    AuthResponseDTO login(LoginRequestDTO dto);
+	RegisterResponseDTO register(RegisterRequestDTO dto);
+    LoginResponseDTO login(LoginRequestDTO dto);
 }
 

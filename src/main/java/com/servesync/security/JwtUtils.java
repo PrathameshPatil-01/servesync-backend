@@ -5,6 +5,7 @@ import com.servesync.exception.InvalidJwtException;
 import com.servesync.exception.JwtExpiredException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ public class JwtUtils {
             logger.error("JWT secret is too short. Must be at least 32 characters for HS256.");
             throw new IllegalArgumentException("JWT secret must be at least 32 characters");
         }
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
     }
 
     /**
@@ -60,6 +61,8 @@ public class JwtUtils {
                 .subject(userPrincipal.getUsername())
                 .issuedAt(now)
                 .expiration(expiryDate)
+                .claim("userId", userPrincipal.getId()) // 🟢 custom claim
+                .claim("email", userPrincipal.getUsername())
                 .claim("authorities", getAuthoritiesAsStringList(userPrincipal.getAuthorities()))
                 .signWith(key)
                 .compact();		

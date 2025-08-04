@@ -1,5 +1,6 @@
 package com.servesync.security;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,50 +15,66 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import lombok.AllArgsConstructor;
-
-
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
-@AllArgsConstructor
-
+@EnableMethodSecurity // Enables @PreAuthorize and other annotations
+@RequiredArgsConstructor
 public class SecurityConfiguration {
 
-	private final JwtFilter jwtFilter;
-	private final PasswordEncoder passwordEncoder;
-	private final CustomUserDetailsServiceImpl customUserDetailsServiceImpl;
+    private final JwtFilter jwtFilter;
+    private final PasswordEncoder passwordEncoder;
+    private final CustomUserDetailsServiceImpl customUserDetailsService;
 
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-		http.csrf(csrf -> csrf.disable());
-		http.authorizeHttpRequests(requests -> requests
-		    		.requestMatchers("/swagger-ui/**",
-							"/v3/api-docs/**", "/api/users/register", "/api/users/login")
-							.permitAll()
-							.requestMatchers(HttpMethod.GET, "/api/**")
-							.permitAll()
-							.requestMatchers(HttpMethod.POST, "/api")
-							.hasRole("ADMIN")
-							.anyRequest()
-							.authenticated());
+        http
+        .cors(Customizer.withDefaults())
+        	.csrf(csrf -> csrf.disable())
 
-		http.sessionManagement(session -> session
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            .authorizeHttpRequests(auth -> auth
+                // Public access endpoints
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/api/users/register",
+                    "/api/users/login"
+                ).permitAll()
 
-		http.formLogin(form -> form.disable());
+                // Public GET APIs
+                .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
 
-		http.httpBasic(Customizer.withDefaults());
+                // Role-based access
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/provider/**").hasAnyRole("PROVIDER", "ADMIN")
+                .requestMatchers("/customer/**").hasAnyRole("CUSTOMER", "ADMIN")
 
-		http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                // Admin-only POST access
+                .requestMatchers(HttpMethod.POST, "/api").hasRole("ADMIN")
 
-		return http.build();
+                // Any other request must be authenticated
+                .anyRequest().authenticated()
+            )
 
-	}
+            // Stateless session
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
 
-	@Bean
-	AuthenticationManager authenticationManager(AuthenticationConfiguration config ) throws Exception {
-		return config.getAuthenticationManager();
-	}
+            // Disable default form login
+            .formLogin(form -> form.disable())
+
+            // Enable HTTP Basic (optional)
+            .httpBasic(Customizer.withDefaults())
+
+            // JWT filter before username-password auth
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
 }

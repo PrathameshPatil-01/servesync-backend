@@ -57,8 +57,8 @@ public class User extends BaseEntity {
         addresses.remove(address);
         address.setUser(null);
     }
-	
-	
+
+
 	// Bidirectional many-to-many relationship with Role
 	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
@@ -79,11 +79,7 @@ public class User extends BaseEntity {
 			role.getUsers().remove(this); // Ensure bidirectional relationship
 		}
 	}
-	
-	 public boolean hasRole(RoleName roleName) {
-	        return roles.stream()
-	                .anyMatch(role -> role.getRoleName() == roleName);
-	    }
+
 
 	// Helper method to clear roles
 	public void clearRoles() {

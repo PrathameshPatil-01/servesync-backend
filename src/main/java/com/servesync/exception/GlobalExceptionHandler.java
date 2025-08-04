@@ -45,6 +45,13 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(UserRoleNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUserRoleNotFound(UserRoleNotFoundException ex) {
+        logger.warn("User role error: {}", ex.getMessage());
+        return buildResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
         logger.warn("Validation error: {}", ex.getMessage());

@@ -60,4 +60,9 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled() {
         return true; // You can add `isEnabled` field to user if needed
     }
+
+	public Long getId() {
+
+		return user.getId();
+	}
 }
