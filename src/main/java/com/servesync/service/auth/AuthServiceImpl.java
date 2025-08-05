@@ -96,18 +96,14 @@ public class AuthServiceImpl implements AuthService {
 
             log.info("Login successful for user: {}", email);
 
-            return LoginResponseDTO.builder()
-                    .token(jwt)
-                    .userId(user.getId())
-                    .firstName(user.getFirstName())
-                    .lastName(user.getLastName())
-                    .phoneNumber(user.getPhoneNumber())
-                    .profilePic(user.getProfilePic())
-                    .email(user.getEmail())
-                    .roles(userDetails.getAuthorities().stream()
+            LoginResponseDTO response = modelMapper.map(user, LoginResponseDTO.class);
+            response.setToken(jwt);
+            response.setUserId(user.getId());        
+            response.setRoles(userDetails.getAuthorities().stream()
                             .map(Object::toString)
-                            .collect(Collectors.toList()))
-                    .build();
+                            .collect(Collectors.toList()));
+            return response;
+
 
         } catch (BadCredentialsException e) {
             log.warn("Invalid login attempt for email: {}", email);
