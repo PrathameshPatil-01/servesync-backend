@@ -2,8 +2,8 @@ package com.servesync.service.provider;
 
 import com.servesync.dto.provider.ProviderServiceCreateDTO;
 import com.servesync.dto.provider.ProviderServiceDTO;
-import com.servesync.dto.provider.ServiceProviderCreateDTO;
-import com.servesync.dto.provider.ServiceProviderDTO;
+import com.servesync.dto.provider.ServiceProviderResponseDTO;
+import com.servesync.dto.provider.ServiceProviderRequestDTO;
 import com.servesync.dto.provider.ServiceProviderUpdateDTO;
 
 import java.util.List;
@@ -12,13 +12,12 @@ public interface ServiceProviderService {
 
 	ProviderServiceDTO addProviderServiceToProvider(Long providerId, ProviderServiceCreateDTO dto);
 
-	List<ServiceProviderDTO> getAllProviders();
+	List<ServiceProviderResponseDTO> getAllProviders();
 
-	ServiceProviderDTO getProviderById(Long id);
+	ServiceProviderResponseDTO getProviderById(Long id);
 
-	ServiceProviderDTO addProvider(ServiceProviderCreateDTO dto);
+	ServiceProviderResponseDTO addProvider(ServiceProviderRequestDTO dto);
 
-	ServiceProviderDTO updateProvider(Long id, ServiceProviderUpdateDTO dto);
+	ServiceProviderResponseDTO updateProvider(Long id, ServiceProviderUpdateDTO dto);
 
-	void deleteProvider(Long id);
 }

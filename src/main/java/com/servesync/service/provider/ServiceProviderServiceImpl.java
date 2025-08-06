@@ -2,8 +2,8 @@ package com.servesync.service.provider;
 
 import com.servesync.dto.provider.ProviderServiceCreateDTO;
 import com.servesync.dto.provider.ProviderServiceDTO;
-import com.servesync.dto.provider.ServiceProviderCreateDTO;
-import com.servesync.dto.provider.ServiceProviderDTO;
+import com.servesync.dto.provider.ServiceProviderRequestDTO;
+import com.servesync.dto.provider.ServiceProviderResponseDTO;
 import com.servesync.dto.provider.ServiceProviderUpdateDTO;
 import com.servesync.entity.provider.ProviderService;
 import com.servesync.entity.provider.ServiceProvider;
@@ -14,6 +14,7 @@ import com.servesync.exception.ResourceNotFoundException;
 import com.servesync.repository.provider.ServiceProviderRepository;
 import com.servesync.repository.service.SubServiceRepository;
 import com.servesync.repository.user.UserRepository;
+import com.servesync.security.SecurityUtils;
 
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -34,50 +35,54 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
 	private final ModelMapper mapper;
 
 	@Override
-	public List<ServiceProviderDTO> getAllProviders() {
+	public List<ServiceProviderResponseDTO> getAllProviders() {
 		return serviceProviderRepository.findAll().stream()
-				.map(provider -> mapper.map(provider, ServiceProviderDTO.class)).collect(Collectors.toList());
+				.map(provider -> mapper.map(provider, ServiceProviderResponseDTO.class)).collect(Collectors.toList());
 	}
 
 	@Override
-	public ServiceProviderDTO getProviderById(Long id) {
+	public ServiceProviderResponseDTO getProviderById(Long id) {
 		ServiceProvider provider = serviceProviderRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Invalid ServiceProvider ID"));
-		return mapper.map(provider, ServiceProviderDTO.class);
+		return mapper.map(provider, ServiceProviderResponseDTO.class);
 	}
 
 	@Override
-	public ServiceProviderDTO addProvider(ServiceProviderCreateDTO dto) {
-		// Check if user already has a provider
-		if (serviceProviderRepository.existsByUserId(dto.getUserId()))
-			throw new ApiException("Provider already exists for this user");
+	public ServiceProviderResponseDTO addProvider(ServiceProviderRequestDTO dto) {
+	    Long currentUserId = SecurityUtils.getCurrentUserId();
 
-		User user = userRepo.findById(dto.getUserId())
-				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
+	    // Check if user already has a provider
+	    if (serviceProviderRepository.existsByUserId(currentUserId)) {
+	        throw new ApiException("Provider already exists for this user");
+	    }
 
-		ServiceProvider entity = mapper.map(dto, ServiceProvider.class);
-		entity.setUser(user);
-		ServiceProvider saved = serviceProviderRepository.save(entity);
+	    User user = userRepo.findById(currentUserId)
+	            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-		return mapper.map(saved, ServiceProviderDTO.class);
+	    ServiceProvider entity = mapper.map(dto, ServiceProvider.class);
+	    entity.setUser(user);
+
+	    ServiceProvider saved = serviceProviderRepository.save(entity);
+	    return mapper.map(saved, ServiceProviderResponseDTO.class);
 	}
 
+
 	@Override
-	public ServiceProviderDTO updateProvider(Long id, ServiceProviderUpdateDTO dto) {
+	public ServiceProviderResponseDTO updateProvider(Long id, ServiceProviderUpdateDTO dto) {
 		ServiceProvider provider = serviceProviderRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Provider not found"));
 
 		mapper.map(dto, provider); // Partial or full update
 		ServiceProvider updated = serviceProviderRepository.save(provider);
-		return mapper.map(updated, ServiceProviderDTO.class);
+		return mapper.map(updated, ServiceProviderResponseDTO.class);
 	}
 
-	@Override
-	public void deleteProvider(Long id) {
-		ServiceProvider provider = serviceProviderRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Provider not found"));
-		serviceProviderRepository.delete(provider); // Hard delete (change to soft if needed)
-	}
+//	@Override
+//	public void deleteProvider(Long id) {
+//		ServiceProvider provider = serviceProviderRepository.findById(id)
+//				.orElseThrow(() -> new ResourceNotFoundException("Provider not found"));
+//		serviceProviderRepository.delete(provider); // Hard delete (change to soft if needed)
+//	}
 
 	@Override
 	public ProviderServiceDTO addProviderServiceToProvider(Long providerId, ProviderServiceCreateDTO dto) {

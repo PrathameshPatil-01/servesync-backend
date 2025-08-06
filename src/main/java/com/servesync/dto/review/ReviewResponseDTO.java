@@ -1,19 +1,22 @@
+// ReviewResponseDTO.java
 package com.servesync.dto.review;
 
-import com.servesync.enums.ReviewTypeEnum;
-import lombok.Getter;
-import lombok.Setter;
+import com.servesync.dto.base.BaseDTO;
+
+import lombok.*;
 
 @Getter
 @Setter
-public class ReviewResponseDTO {
+@NoArgsConstructor
+@AllArgsConstructor
+public class ReviewResponseDTO extends BaseDTO {
     private Long id;
     private Long bookingId;
     private Long reviewerId;
     private Long revieweeId;
-    private ReviewTypeEnum reviewType;
-    private int rating;
-    private String comment;
+    private int providerRating;
+    private int customerRating;
+    private String reviewText;
     private String response;
-    private boolean isDeleted;
 }
+

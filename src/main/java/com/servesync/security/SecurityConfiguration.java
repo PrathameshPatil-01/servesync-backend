@@ -46,8 +46,8 @@ public class SecurityConfiguration {
 
                 // Role-based access
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/provider/**").hasAnyRole("PROVIDER", "ADMIN")
-                .requestMatchers("/customer/**").hasAnyRole("CUSTOMER", "ADMIN")
+                .requestMatchers("/providers/**").hasAnyRole("PROVIDER", "ADMIN")
+                .requestMatchers("/customers/**").hasAnyRole("CUSTOMER", "ADMIN")
 
                 // Admin-only POST access
                 .requestMatchers(HttpMethod.POST, "/api").hasRole("ADMIN")

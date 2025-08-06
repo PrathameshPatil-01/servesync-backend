@@ -1,6 +1,7 @@
 package com.servesync.dto.provider;
 
 import jakarta.validation.constraints.*;
+
 import lombok.*;
 
 import java.time.LocalTime;
@@ -11,10 +12,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ServiceProviderUpdateDTO {
-
-    @NotNull(message = "Service Provider ID is required")
-    private Long providerId;
+public class ServiceProviderRequestDTO {
 
     @NotBlank(message = "Business name is required")
     private String businessName;
@@ -26,19 +24,17 @@ public class ServiceProviderUpdateDTO {
     private String aadharNumber;
 
     private String gstNumber;
-
     private String panNumber;
 
     @Size(max = 1000)
     private String bio;
 
+    @NotNull
     @Min(0)
     private Integer yearsOfExperience;
 
-    private String availableDays; // e.g., "Mon,Tue"
-
+//    private String availableDays; // e.g., Mon,Tue
     private LocalTime availableTimeStart;
-
     private LocalTime availableTimeEnd;
 
     @Min(0)
@@ -46,5 +42,6 @@ public class ServiceProviderUpdateDTO {
 
     private Set<String> documents;
 
-    private Set<Long> providerServiceIds;
+    private Set<Long> providerServiceIds; // IDs of linked services
 }
+

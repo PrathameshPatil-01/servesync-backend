@@ -41,6 +41,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 log.debug("Populated authentication for JWT: {}", authentication);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                
 
             } catch (JwtException e) {
                 log.warn("Invalid JWT token: {}", e.getMessage());
