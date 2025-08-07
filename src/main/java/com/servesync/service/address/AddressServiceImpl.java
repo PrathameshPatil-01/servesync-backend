@@ -6,13 +6,14 @@ import com.servesync.entity.address.Address;
 import com.servesync.entity.user.User;
 import com.servesync.exception.ResourceNotFoundException;
 import com.servesync.repository.address.AddressRepository;
-import com.servesync.repository.user.*;
+import com.servesync.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
+import org.modelmapper.ModelMapper; // Import ModelMapper
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -21,12 +22,7 @@ public class AddressServiceImpl implements AddressService {
 
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
-    private final ModelMapper modelMapper;
-
-    // ✅ Helper method
-    private AddressResponseDTO convertToDTO(Address address) {
-        return modelMapper.map(address, AddressResponseDTO.class);
-    }
+    private final ModelMapper modelMapper; // Injected ModelMapper
 
     @Override
     public AddressResponseDTO addAddressForUser(Long userId, AddressRequestDTO dto) {
@@ -37,14 +33,14 @@ public class AddressServiceImpl implements AddressService {
         address.setUser(user);
 
         Address saved = addressRepository.save(address);
-        return convertToDTO(saved);
+        return modelMapper.map(saved, AddressResponseDTO.class); // Use ModelMapper
     }
 
     @Override
     public AddressResponseDTO getAddressById(Long id) {
         Address address = addressRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + id));
-        return convertToDTO(address);
+        return modelMapper.map(address, AddressResponseDTO.class); // Use ModelMapper
     }
 
     @Override
@@ -55,7 +51,7 @@ public class AddressServiceImpl implements AddressService {
 
         return addressRepository.findByUserId(userId)
                 .stream()
-                .map(this::convertToDTO)
+                .map(address -> modelMapper.map(address, AddressResponseDTO.class)) // Use ModelMapper
                 .toList();
     }
 
@@ -64,10 +60,10 @@ public class AddressServiceImpl implements AddressService {
         Address address = addressRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + id));
 
-        modelMapper.map(dto, address); // ✅ Updates fields
+        modelMapper.map(dto, address); // Use ModelMapper for update
         Address updated = addressRepository.save(address);
 
-        return convertToDTO(updated);
+        return modelMapper.map(updated, AddressResponseDTO.class); // Use ModelMapper
     }
 
     @Override

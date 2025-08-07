@@ -13,7 +13,7 @@ import com.servesync.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.modelmapper.ModelMapper;
+import org.modelmapper.ModelMapper; // Import ModelMapper
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -26,7 +26,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final ModelMapper modelMapper;
+    private final ModelMapper modelMapper; // Injected ModelMapper
 
     @Override
     public UserResponseDTO createUser(UserCreateDTO dto) {
@@ -87,6 +87,7 @@ public class UserServiceImpl implements UserService {
     private UserResponseDTO mapToUserResponseDTO(User user) {
         UserResponseDTO dto = modelMapper.map(user, UserResponseDTO.class);
 
+        // Explicitly map roles as ModelMapper might struggle with Set<Role> to Set<RoleDTO>
         Set<RoleDTO> roleDTOs = user.getRoles().stream()
                 .map(role -> modelMapper.map(role, RoleDTO.class))
                 .collect(Collectors.toSet());

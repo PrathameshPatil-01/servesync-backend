@@ -32,6 +32,7 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
 	private final ServiceProviderRepository serviceProviderRepository;
 	private final SubServiceRepository subServiceRepository;
 	private final UserRepository userRepo;
+	private final SecurityUtils securityUtils;
 	private final ModelMapper mapper;
 
 	@Override
@@ -49,7 +50,7 @@ public class ServiceProviderServiceImpl implements ServiceProviderService {
 
 	@Override
 	public ServiceProviderResponseDTO addProvider(ServiceProviderRequestDTO dto) {
-	    Long currentUserId = SecurityUtils.getCurrentUserId();
+	    Long currentUserId = securityUtils.getCurrentUserId();
 
 	    // Check if user already has a provider
 	    if (serviceProviderRepository.existsByUserId(currentUserId)) {

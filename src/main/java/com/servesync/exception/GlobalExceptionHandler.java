@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,7 +33,6 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getMessage(), HttpStatus.NOT_FOUND, null);
     }
 
-
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
         logger.warn("Authentication error: {}", ex.getMessage());
@@ -51,6 +51,17 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+        logger.warn("Access denied: {}", ex.getMessage());
+        return buildResponse("Access Denied: You do not have permission to access this resource.", HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        logger.warn("Illegal argument: {}", ex.getMessage());
+        return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
@@ -72,6 +83,7 @@ public class GlobalExceptionHandler {
         logger.warn("JWT error: {}", ex.getMessage());
         return buildResponse("Invalid token", HttpStatus.UNAUTHORIZED);
     }
+
     @ExceptionHandler(JwtExpiredException.class)
     public ResponseEntity<Map<String, Object>> handleJwtExpired(JwtExpiredException ex) {
         logger.warn("JWT expired: {}", ex.getMessage());

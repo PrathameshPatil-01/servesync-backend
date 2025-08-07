@@ -3,6 +3,7 @@ package com.servesync.repository.user;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.servesync.entity.user.User;
+import com.servesync.enums.RoleName;
 
 import java.util.Optional;
 

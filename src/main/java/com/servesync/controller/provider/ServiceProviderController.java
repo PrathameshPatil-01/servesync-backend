@@ -20,7 +20,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
 @RestController
-@RequestMapping("/api/providers")
+@RequestMapping("/api/service-providers")
 @CrossOrigin(origins = "http://localhost:5173")  // adjust origin if needed
 @Validated
 public class ServiceProviderController {
