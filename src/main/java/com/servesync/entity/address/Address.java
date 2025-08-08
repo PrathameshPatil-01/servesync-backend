@@ -1,5 +1,7 @@
 package com.servesync.entity.address;
 
+import java.math.BigDecimal;
+
 import com.servesync.entity.base.BaseEntityWithId;
 import com.servesync.entity.user.User;
 
@@ -14,10 +16,11 @@ import lombok.*;
 @AllArgsConstructor
 public class Address extends BaseEntityWithId {
 
-    @Column(nullable = false)
-    private String line1;
+    @Column(name = "house_no", nullable = false)
+    private String houseNo;
 
-    private String line2;
+    @Column(name = "area")
+    private String area;
 
     @Column(nullable = false)
     private String city;
@@ -26,15 +29,22 @@ public class Address extends BaseEntityWithId {
     private String state;
 
     @Column(nullable = false)
-    private String country;
+    private String landmark;
+
+    @Column(nullable = true)
+    private String country = "India";
+
 
     @Column(name = "postal_code", nullable = false)
     private String postalCode;
 
-    private Double latitude;
-    private Double longitude;
+    @Column(precision = 9, scale = 6)
+    private BigDecimal latitude;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @Column(precision = 9, scale = 6)
+    private BigDecimal longitude;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 }

@@ -2,48 +2,46 @@ package com.servesync.controller.address;
 
 import com.servesync.dto.address.AddressRequestDTO;
 import com.servesync.dto.address.AddressResponseDTO;
+import com.servesync.security.CustomUserDetails;
 import com.servesync.service.address.AddressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/users/{userId}/addresses")
+@RequestMapping("/api/address")
 @RequiredArgsConstructor
-public class AddressController {   // ✅ Class must be public
+public class AddressController {
 
-    private final AddressService addressService; // ✅ final field
+    private final AddressService addressService;
 
-    @PostMapping
-    public ResponseEntity<AddressResponseDTO> addAddress(
-            @PathVariable Long userId,
-            @RequestBody AddressRequestDTO dto) {
-
-        return ResponseEntity.ok(addressService.addAddressForUser(userId, dto));
-    }
-
+    // Get Address of logged-in user
     @GetMapping
-    public ResponseEntity<List<AddressResponseDTO>> getAllAddresses(@PathVariable Long userId) {
-        return ResponseEntity.ok(addressService.getAllAddressesForUser(userId));
+    public ResponseEntity<AddressResponseDTO> getAddress() {
+        Long userId = getLoggedInUserId();
+        AddressResponseDTO response = addressService.getAddressByUserId(userId);
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{addressId}")
-    public ResponseEntity<AddressResponseDTO> getAddressById(@PathVariable Long addressId) {
-        return ResponseEntity.ok(addressService.getAddressById(addressId));
+    // Add or Update Address of logged-in user
+    @PostMapping
+    public ResponseEntity<AddressResponseDTO> addOrUpdateAddress(@RequestBody AddressRequestDTO requestDTO) {
+        Long userId = getLoggedInUserId();
+        AddressResponseDTO response = addressService.addOrUpdateAddress(userId, requestDTO);
+        return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{addressId}")
-    public ResponseEntity<AddressResponseDTO> updateAddress(
-            @PathVariable Long addressId,
-            @RequestBody AddressRequestDTO dto) {
+    // Helper method to extract user ID from token
+    private Long getLoggedInUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        return ResponseEntity.ok(addressService.updateAddress(addressId, dto));
-    }
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            return userDetails.getId();
+        }
 
-    @DeleteMapping("/{addressId}")
-    public ResponseEntity<String> deleteAddress(@PathVariable Long addressId) {
-        return ResponseEntity.ok(addressService.deleteAddress(addressId));
+        throw new RuntimeException("User not authenticated");
     }
 }

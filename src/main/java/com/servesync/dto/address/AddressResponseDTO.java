@@ -1,18 +1,27 @@
 package com.servesync.dto.address;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AddressResponseDTO {
+
     private Long id;
-    private String line1;
-    private String line2;
+    private String houseNo;
+
+	  
+    private String area;
+
     private String city;
+ 
     private String state;
-    private String country;
+ 
+    private String landmark;
+
     private String postalCode;
-    private Double latitude;
-    private Double longitude;
-    private Long userId; // ✅ Shows which user owns the address
 }
