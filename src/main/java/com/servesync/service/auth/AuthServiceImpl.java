@@ -9,6 +9,7 @@ import com.servesync.entity.user.User;
 import com.servesync.enums.RoleName;
 import com.servesync.exception.EmailAlreadyExistsException;
 import com.servesync.exception.UserRoleNotFoundException;
+import com.servesync.repository.provider.ProviderRepository;
 import com.servesync.repository.role.RoleRepository;
 import com.servesync.repository.user.UserRepository;
 import com.servesync.security.CustomUserDetails;
@@ -37,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ProviderRepository providerRepository; // Assuming this is needed for provider-specific logic
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final ModelMapper modelMapper;
@@ -98,10 +100,19 @@ public class AuthServiceImpl implements AuthService {
 
             LoginResponseDTO response = modelMapper.map(user, LoginResponseDTO.class);
             response.setToken(jwt);
-            response.setUserId(user.getId());        
+            response.setUserId(user.getId());
             response.setRoles(userDetails.getAuthorities().stream()
                             .map(Object::toString)
                             .collect(Collectors.toList()));
+
+            // If the user is a provider, include providerId in the response
+            if (user.getRoleNames().contains(RoleName.ROLE_PROVIDER.name())) {
+                providerRepository.findByUserId(user.getId()).ifPresent(provider -> {
+                    response.setProviderId(provider.getId());
+                });
+            }
+
+
             return response;
 
 
