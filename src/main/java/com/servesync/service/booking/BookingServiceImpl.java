@@ -4,6 +4,7 @@ import com.servesync.dto.booking.BookingRequestDTO;
 import com.servesync.dto.booking.BookingResponseDTO;
 import com.servesync.entity.booking.Booking;
 import com.servesync.enums.BookingStatusEnum;
+import com.servesync.exception.ResourceNotFoundException;
 import com.servesync.repository.address.AddressRepository;
 import com.servesync.repository.booking.BookingRepository;
 import com.servesync.repository.provider.ProviderServiceRepository;
@@ -60,5 +61,13 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public void deleteBooking(Long id) {
         bookingRepository.deleteById(id);
+    }
+    
+    @Override
+    public void softDeleteBooking(Long id) { // Soft delete
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + id));
+        booking.setIsDeleted(true);
+        bookingRepository.save(booking);
     }
 }

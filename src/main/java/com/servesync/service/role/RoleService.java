@@ -10,4 +10,5 @@ public interface RoleService {
     List<RoleDTO> getAllRoles();
     RoleDTO getRoleById(Short id);
     void deleteRole(Short id);
+    
 }

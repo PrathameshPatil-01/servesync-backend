@@ -19,4 +19,6 @@ public interface OrderService {
     boolean isOrderAccessible(Long orderId);
     boolean isOrderOwnedByCurrentUser(Long orderId);
     boolean canUpdateOrderStatus(Long orderId, OrderStatusEnum newStatus);
+    
+    
 }

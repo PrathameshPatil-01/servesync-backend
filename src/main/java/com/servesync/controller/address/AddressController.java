@@ -44,4 +44,10 @@ public class AddressController {
 
         throw new RuntimeException("User not authenticated");
     }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> softDeleteAddress(@PathVariable Long id) {
+        addressService.deleteAddress(id);
+        return ResponseEntity.noContent().build();
+    }
 }

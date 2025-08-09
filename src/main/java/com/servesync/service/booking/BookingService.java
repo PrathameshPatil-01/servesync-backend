@@ -11,5 +11,6 @@ public interface BookingService {
     List<BookingResponseDTO> getAllBookings();
     BookingResponseDTO updateBooking(Long id, BookingRequestDTO dto);
     void deleteBooking(Long id);
+    void softDeleteBooking(Long id);
 
 }

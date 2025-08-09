@@ -46,4 +46,16 @@ public class AddressServiceImpl implements AddressService {
 
         return modelMapper.map(savedAddress, AddressResponseDTO.class);
     }
+    
+    @Override
+    public void deleteAddress(Long userId) {
+        Address address = addressRepository.findByUserIdAndIsDeletedFalse(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("No active address found for user ID: " + userId));
+
+        // Soft delete
+        address.setIsDeleted(true);
+        addressRepository.save(address);
+    }
+    
+    
 }

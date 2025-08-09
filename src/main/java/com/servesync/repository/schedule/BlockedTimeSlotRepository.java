@@ -1,5 +1,6 @@
 package com.servesync.repository.schedule;
 
+import com.servesync.entity.provider.Provider;
 import com.servesync.entity.schedule.BlockedTimeSlot;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BlockedTimeSlotRepository extends JpaRepository<BlockedTimeSlot, Long> {
@@ -17,4 +19,6 @@ public interface BlockedTimeSlotRepository extends JpaRepository<BlockedTimeSlot
 
     @Query("SELECT CASE WHEN COUNT(b) > 0 THEN TRUE ELSE FALSE END FROM BlockedTimeSlot b WHERE b.id = :slotId AND b.provider.id = :providerId AND b.isDeleted = FALSE")
     boolean existsByIdAndProviderId(@Param("slotId") Long slotId, @Param("providerId") Long providerId);
+
+	Optional<Provider> findByIdAndIsDeletedFalse(Long slotId);
 }

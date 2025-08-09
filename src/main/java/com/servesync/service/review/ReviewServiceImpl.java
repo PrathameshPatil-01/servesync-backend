@@ -107,5 +107,14 @@ public class ReviewServiceImpl implements ReviewService {
         // Check if the user has the ROLE_PROVIDER role
         return user.getRoles().stream().anyMatch(role -> role.getRoleName().equals(RoleName.ROLE_PROVIDER));
     }
+    
+    
+    @Override
+    public void softDeleteReview(Long id) {
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Review not found"));
+        review.setIsDeleted(true);
+        reviewRepository.save(review);
+    }
 }
 

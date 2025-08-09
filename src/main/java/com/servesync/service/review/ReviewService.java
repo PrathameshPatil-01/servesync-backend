@@ -12,4 +12,5 @@ public interface ReviewService {
  ReviewResponseDTO updateReview(ReviewUpdateDTO dto);
  List<ReviewResponseDTO> getReviewsForUser(Long userId); // both customer or provider
  List<ReviewResponseDTO> getReviewsForBooking(Long bookingId);
+ void softDeleteReview(Long id);
 }

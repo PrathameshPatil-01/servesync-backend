@@ -50,4 +50,10 @@ public class BookingController {
         bookingService.deleteBooking(id);
         return ResponseEntity.noContent().build();
     }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> softDeleteBooking(@PathVariable Long id) {
+        bookingService.deleteBooking(id); // now soft delete
+        return ResponseEntity.noContent().build();
+    }
 }

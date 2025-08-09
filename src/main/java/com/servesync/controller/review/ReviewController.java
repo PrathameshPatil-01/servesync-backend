@@ -57,4 +57,12 @@ public class ReviewController {
 //        reviewService.deleteReview(reviewId);
 //        return ResponseEntity.noContent().build(); // 204 No Content
 //    }
+    
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> softDeleteReview(@PathVariable Long id) {
+        reviewService.softDeleteReview(id);
+        return ResponseEntity.noContent().build();
+    }
 }
+

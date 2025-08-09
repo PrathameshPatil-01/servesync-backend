@@ -9,4 +9,6 @@ import java.util.Optional;
 
 public interface AddressRepository extends JpaRepository<Address, Long> {
 	Optional<Address> findByUserId(Long userId);
+	Optional<Address> findByUserIdAndIsDeletedFalse(Long userId);
+
 }

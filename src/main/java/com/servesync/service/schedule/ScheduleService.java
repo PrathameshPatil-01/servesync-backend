@@ -18,4 +18,5 @@ public interface ScheduleService {
 
     // Security helper method
     boolean isBlockedSlotOwnedByCurrentUser(Long slotId);
+    
 }
