@@ -8,6 +8,7 @@ import com.servesync.dto.service.AddServiceDto;
 import com.servesync.dto.service.ServiceDto;
 
 
+
 public interface ServiceService {
 
 	
