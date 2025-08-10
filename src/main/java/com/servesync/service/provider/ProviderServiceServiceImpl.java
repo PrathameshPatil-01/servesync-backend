@@ -44,6 +44,8 @@ public class ProviderServiceServiceImpl implements ProviderServiceService {
                 .orElseThrow(() -> new ResourceNotFoundException("ProviderService not found with id: " + id));
         return modelMapper.map(providerService, ProviderServiceDTO.class);
     }
+    
+    
 
     @Override
     public ProviderServiceDTO create(ProviderServiceCreateDTO createDto) {
