@@ -1,5 +1,7 @@
 package com.servesync.entity.service;
 
+import java.math.BigDecimal;
+
 import com.servesync.entity.base.BaseEntityWithId;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,7 +25,7 @@ public class SubService extends BaseEntityWithId {
     private String description;
 
     @Column(name = "base_price")
-    private Double basePrice;
+    private BigDecimal basePrice;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;

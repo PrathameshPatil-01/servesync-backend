@@ -8,7 +8,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
 	List<Review> findByRevieweeIdAndIsDeletedFalse(Long userId);
 
-	// Corrected method signature to return List<Review> for a booking ID
-	List<Review> findByBookingIdAndIsDeletedFalse(Long bookingId);
+	// Corrected method signature to return List<Review> for a order ID
+	List<Review> findByOrderIdAndIsDeletedFalse(Long orderId);
 }
 

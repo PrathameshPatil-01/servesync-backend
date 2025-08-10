@@ -1,9 +1,12 @@
 package com.servesync.service.provider;
 
 import com.servesync.dto.provider.ProviderDashboardStatsDTO;
+import com.servesync.dto.provider.ProviderDetailsByServiceDTO;
 import com.servesync.dto.provider.ProviderRequestDTO;
 import com.servesync.dto.provider.ProviderResponseDTO;
 import com.servesync.dto.provider.ProviderUpdateDTO;
+import com.servesync.dto.provider.ServiceProviderGetDTO;
+import com.servesync.dto.provider.UserSubServiceDetailsDTO;
 
 import java.util.List;
 
@@ -19,4 +22,10 @@ public interface ProviderService {
     // Security helper methods
     boolean isProviderRegisteredForCurrentUser();
     boolean isProviderAccessible(Long providerId);
+
+	 List<ServiceProviderGetDTO> getAllProvidersWithServices();
+    List<ServiceProviderGetDTO> getProvidersBySubService(Long subServiceId);
+    List<UserSubServiceDetailsDTO> getSubServicesByUserId(Long userId);
+    List<ProviderDetailsByServiceDTO> getProvidersByServiceName(String serviceName);
+    List<ProviderDetailsByServiceDTO> getAllUsersWithServices();
 }

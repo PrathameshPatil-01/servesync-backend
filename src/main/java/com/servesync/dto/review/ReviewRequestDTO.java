@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class ReviewRequestDTO {
     @NotNull
-    private Long bookingId;
+    private Long orderId;
 
     @NotNull
     private Long reviewerId;

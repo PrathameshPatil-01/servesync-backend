@@ -1,7 +1,7 @@
 package com.servesync.entity.verification;
 
 import com.servesync.entity.base.BaseEntityWithId;
-import com.servesync.entity.provider.ServiceProvider;
+import com.servesync.entity.provider.Provider;
 import com.servesync.entity.user.User;
 import com.servesync.enums.VerificationStatusEnum;
 
@@ -20,7 +20,7 @@ public class ProviderVerification extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "provider_id", nullable = false)
-    private ServiceProvider provider;
+    private Provider provider;
 
     @Column(name = "document_type", nullable = false)
     private String documentType;

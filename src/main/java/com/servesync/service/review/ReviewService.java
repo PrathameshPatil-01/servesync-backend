@@ -11,5 +11,5 @@ public interface ReviewService {
  ReviewResponseDTO createReview(ReviewRequestDTO dto);
  ReviewResponseDTO updateReview(ReviewUpdateDTO dto);
  List<ReviewResponseDTO> getReviewsForUser(Long userId); // both customer or provider
- List<ReviewResponseDTO> getReviewsForBooking(Long bookingId);
+ List<ReviewResponseDTO> getReviewsForOrder(Long orderId);
 }

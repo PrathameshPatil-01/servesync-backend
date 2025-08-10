@@ -1,11 +1,11 @@
 package com.servesync.service.review;
 
 import com.servesync.dto.review.*;
-import com.servesync.entity.booking.Booking;
+import com.servesync.entity.order.Order;
 import com.servesync.entity.review.Review;
 import com.servesync.entity.user.User;
 import com.servesync.enums.RoleName;
-import com.servesync.repository.booking.BookingRepository;
+import com.servesync.repository.order.OrderRepository;
 import com.servesync.repository.review.ReviewRepository;
 import com.servesync.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
@@ -22,14 +22,14 @@ public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
-    private final BookingRepository bookingRepository;
+    private final OrderRepository orderRepository;
     private final ModelMapper modelMapper;
 
     @Override
     @Transactional
     public ReviewResponseDTO createReview(ReviewRequestDTO dto) {
-        Booking booking = bookingRepository.findById(dto.getBookingId())
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        Order order = orderRepository.findById(dto.getOrderId())
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
         User reviewer = userRepository.findById(dto.getReviewerId())
                 .orElseThrow(() -> new RuntimeException("Reviewer not found"));
@@ -38,7 +38,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new RuntimeException("Reviewee not found"));
 
         Review review = new Review();
-        review.setBooking(booking);
+        review.setOrder(order);
         review.setReviewer(reviewer);
         review.setReviewee(reviewee);
 
@@ -87,15 +87,15 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<ReviewResponseDTO> getReviewsForBooking(Long bookingId) {
-        // The findByBookingIdAndIsDeletedFalse method in ReviewRepository returns Optional<Booking>, which is incorrect.
-        // It should return List<Review> for a given bookingId.
+    public List<ReviewResponseDTO> getReviewsForOrder(Long orderId) {
+        // The findByOrderIdAndIsDeletedFalse method in ReviewRepository returns Optional<Order>, which is incorrect.
+        // It should return List<Review> for a given orderId.
         // Assuming a correct repository method exists or is added:
-        // List<Review> reviews = reviewRepository.findByBookingIdAndIsDeletedFalse(bookingId);
+        // List<Review> reviews = reviewRepository.findByOrderIdAndIsDeletedFalse(orderId);
         // For now, I'll mock this or assume a correct method is available.
-        // Let's assume a method `findByBookingIdAndIsDeletedFalse` that returns `List<Review>`
+        // Let's assume a method `findByOrderIdAndIsDeletedFalse` that returns `List<Review>`
         List<Review> reviews = reviewRepository.findAll().stream() // Placeholder: replace with actual query
-                .filter(r -> r.getBooking().getId().equals(bookingId) && !r.getIsDeleted())
+                .filter(r -> r.getOrder().getId().equals(orderId) && !r.getIsDeleted())
                 .collect(Collectors.toList());
 
         return reviews.stream()

@@ -7,5 +7,5 @@ public interface PaymentService {
     PaymentResponseDTO getPaymentById(Long id);
     PaymentResponseDTO createPayment(PaymentRequestDTO request);
     PaymentResponseDTO updatePaymentStatus(Long id, String status);
-    PaymentResponseDTO getPaymentByBookingId(Long bookingId);
+    PaymentResponseDTO getPaymentByOrderId(Long orderId);
 }

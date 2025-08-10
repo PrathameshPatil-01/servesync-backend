@@ -41,7 +41,7 @@ public class PaymentController {
 
     @GetMapping("/booking/{bookingId}")
     @Operation(summary = "Get payment by booking ID")
-    public ResponseEntity<PaymentResponseDTO> getPaymentByBooking(@PathVariable @Min(1) Long bookingId) {
-        return ResponseEntity.ok(paymentService.getPaymentByBookingId(bookingId));
+    public ResponseEntity<PaymentResponseDTO> getPaymentByOrder(@PathVariable @Min(1) Long bookingId) {
+        return ResponseEntity.ok(paymentService.getPaymentByOrderId(bookingId));
     }
 }

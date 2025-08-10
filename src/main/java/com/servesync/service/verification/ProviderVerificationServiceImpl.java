@@ -2,12 +2,12 @@ package com.servesync.service.verification;
 
 import com.servesync.dto.verification.ProviderVerificationRequestDTO;
 import com.servesync.dto.verification.ProviderVerificationResponseDTO;
-import com.servesync.entity.provider.ServiceProvider;
+import com.servesync.entity.provider.Provider;
 import com.servesync.entity.user.User;
 import com.servesync.entity.verification.ProviderVerification;
 import com.servesync.enums.VerificationStatusEnum;
 import com.servesync.exception.ResourceNotFoundException;
-import com.servesync.repository.provider.ServiceProviderRepository;
+import com.servesync.repository.provider.ProviderRepository;
 import com.servesync.repository.user.UserRepository;
 import com.servesync.repository.verification.ProviderVerificationRepository;
 import com.servesync.service.verification.ProviderVerificationService;
@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 public class ProviderVerificationServiceImpl implements ProviderVerificationService {
 
     private final ProviderVerificationRepository verificationRepo;
-    private final ServiceProviderRepository providerRepo;
+    private final ProviderRepository providerRepo;
     private final UserRepository userRepo;
     private final ModelMapper modelMapper;
 
@@ -35,8 +35,8 @@ public class ProviderVerificationServiceImpl implements ProviderVerificationServ
     public ProviderVerificationResponseDTO submitVerification(ProviderVerificationRequestDTO dto) {
         log.info("Submitting provider verification for providerId: {}", dto.getProviderId());
 
-        ServiceProvider provider = providerRepo.findById(dto.getProviderId())
-                .orElseThrow(() -> new ResourceNotFoundException("ServiceProvider not found with ID: " + dto.getProviderId()));
+        Provider provider = providerRepo.findById(dto.getProviderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Provider not found with ID: " + dto.getProviderId()));
 
         ProviderVerification verification = new ProviderVerification();
         verification.setProvider(provider);

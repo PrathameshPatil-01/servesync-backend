@@ -1,7 +1,7 @@
 package com.servesync.entity.review;
 
 import com.servesync.entity.base.BaseEntityWithId;
-import com.servesync.entity.booking.Booking;
+import com.servesync.entity.order.Order;
 import com.servesync.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,10 +9,10 @@ import lombok.*;
 @Entity
 @Table(
     name = "reviews",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"booking_id", "reviewer_id", "reviewee_id"}),
+    uniqueConstraints = @UniqueConstraint(columnNames = {"order_id", "reviewer_id", "reviewee_id"}),
     indexes = {
         @Index(name = "idx_reviewee", columnList = "reviewee_id"),
-        @Index(name = "idx_booking_review", columnList = "booking_id")
+        @Index(name = "idx_order_review", columnList = "order_id")
     }
 )
 @Getter
@@ -23,8 +23,8 @@ import lombok.*;
 public class Review extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "booking_id")
-    private Booking booking;
+    @JoinColumn(name = "order_id")
+    private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "reviewer_id")

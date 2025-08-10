@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class PaymentRequestDTO {
 
     @NotNull(message = "Booking ID must not be null")
-    private Long bookingId;
+    private Long orderId;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than 0")
@@ -39,4 +39,5 @@ public class PaymentRequestDTO {
 
     @PastOrPresent(message = "Paid date can't be in the future")
     private LocalDateTime paidAt;
+
 }

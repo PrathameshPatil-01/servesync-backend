@@ -1,23 +1,25 @@
 package com.servesync.dto.provider;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ProviderServiceGetDTO {
-
-    private Long id;
-
+    private Long offerId;               // provider service offer id
     private Long subServiceId;
-
-    private String subServiceName;  // if you want to include subservice details
-
-    private Double price;
-
-    private String description;
-
-    // Add other fields as needed
-
+    private String subServiceName;
+    private Long serviceId;
+    private String serviceName;
+    private String currency;
+    private Integer estimatedDurationMinutes;
+    private Boolean isActive;
+    private BigDecimal basePrice;           // from SubService.basePrice
+    private String subServiceDescription;
 }

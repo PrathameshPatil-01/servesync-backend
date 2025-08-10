@@ -1,9 +1,12 @@
 package com.servesync.controller.provider;
 
 import com.servesync.dto.provider.ProviderDashboardStatsDTO;
+import com.servesync.dto.provider.ProviderDetailsByServiceDTO;
 import com.servesync.dto.provider.ProviderRequestDTO;
 import com.servesync.dto.provider.ProviderResponseDTO;
 import com.servesync.dto.provider.ProviderUpdateDTO;
+import com.servesync.dto.provider.ServiceProviderGetDTO;
+import com.servesync.dto.provider.UserSubServiceDetailsDTO;
 import com.servesync.service.provider.ProviderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -79,5 +82,51 @@ public class ProviderController {
     @PreAuthorize("hasRole('PROVIDER') and @securityUtils.getCurrentProviderId() == #providerId or hasRole('ADMIN')")
     public ResponseEntity<ProviderDashboardStatsDTO> getProviderDashboardStats(@PathVariable @Min(1) Long providerId) {
         return ResponseEntity.ok(providerService.getProviderDashboardStats(providerId));
+    }
+
+    @GetMapping("/with-services")
+    @Operation(description = "Get all service providers along with their services")
+    public ResponseEntity<List<ServiceProviderGetDTO>> getAllProvidersWithServices() {
+        List<ServiceProviderGetDTO> providers = providerService.getAllProvidersWithServices();
+        if (providers.isEmpty())
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.ok(providers);
+    }
+
+    // ✅ Get all providers offering a specific subservice
+    @GetMapping("/by-subservice/{subServiceId}")
+    @Operation(description = "Get providers who offer a specific sub-service by ID")
+    public ResponseEntity<List<ServiceProviderGetDTO>> getProvidersBySubService(
+            @PathVariable Long subServiceId) {
+
+        List<ServiceProviderGetDTO> providers = providerService.getProvidersBySubService(subServiceId);
+        if (providers.isEmpty())
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.ok(providers);
+
+}
+
+    @GetMapping("/users/{userId}/sub-services")
+    public ResponseEntity<List<UserSubServiceDetailsDTO>> getUserSubServices(@PathVariable Long userId) {
+        List<UserSubServiceDetailsDTO> services = providerService.getSubServicesByUserId(userId);
+        return services.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(services);
+    }
+
+    @GetMapping("/by-service-name")
+    public ResponseEntity<List<ProviderDetailsByServiceDTO>> getByServiceName(@RequestParam String serviceName) {
+        List<ProviderDetailsByServiceDTO> providers = providerService.getProvidersByServiceName(serviceName);
+        if (providers.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(providers);
+    }
+
+    @GetMapping("/all-users-with-services")
+    public ResponseEntity<List<ProviderDetailsByServiceDTO>> getAllUsersWithServices() {
+        List<ProviderDetailsByServiceDTO> result = providerService.getAllUsersWithServices();
+        if (result.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(result);
     }
 }

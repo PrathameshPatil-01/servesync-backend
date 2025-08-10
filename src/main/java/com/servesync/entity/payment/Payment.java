@@ -1,7 +1,7 @@
 package com.servesync.entity.payment;
 
 import com.servesync.entity.base.BaseEntityWithId;
-import com.servesync.entity.booking.Booking;
+import com.servesync.entity.order.Order;
 import com.servesync.enums.PaymentMethodEnum;
 import com.servesync.enums.PaymentStatusEnum;
 import jakarta.persistence.*;
@@ -19,8 +19,8 @@ import java.time.LocalDateTime;
 public class Payment extends BaseEntityWithId {
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id", nullable = false, unique = true)
-    private Booking booking;
+    @JoinColumn(name = "order_id", nullable = false, unique = true)
+    private Order order;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
