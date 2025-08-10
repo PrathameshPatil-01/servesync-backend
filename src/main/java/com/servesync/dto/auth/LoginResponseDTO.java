@@ -22,6 +22,6 @@ public class LoginResponseDTO extends BaseDTO {
 	private String phoneNumber;
 	private String profilePic;
     private List<String> roles;
-
+    private Long providerId; // Optional, only for providers
 }
 

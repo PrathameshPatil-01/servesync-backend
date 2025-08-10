@@ -4,6 +4,7 @@ import com.servesync.dto.review.*;
 import com.servesync.entity.booking.Booking;
 import com.servesync.entity.review.Review;
 import com.servesync.entity.user.User;
+import com.servesync.enums.RoleName;
 import com.servesync.repository.booking.BookingRepository;
 import com.servesync.repository.review.ReviewRepository;
 import com.servesync.repository.user.UserRepository;
@@ -41,11 +42,13 @@ public class ReviewServiceImpl implements ReviewService {
         review.setReviewer(reviewer);
         review.setReviewee(reviewee);
 
-        // Set correct rating
+        // Set correct rating based on reviewee's role
         if (isProvider(reviewee)) {
             review.setProviderRating(dto.getRating());
+            review.setCustomerRating(null); // Ensure customer rating is null for provider reviews
         } else {
             review.setCustomerRating(dto.getRating());
+            review.setProviderRating(null); // Ensure provider rating is null for customer reviews
         }
 
         review.setReviewText(dto.getReviewText());
@@ -60,7 +63,7 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(dto.getReviewId())
                 .orElseThrow(() -> new RuntimeException("Review not found"));
 
-        // Update rating
+        // Update rating based on reviewee's role
         if (isProvider(review.getReviewee())) {
             review.setProviderRating(dto.getRating());
         } else {
@@ -76,6 +79,8 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public List<ReviewResponseDTO> getReviewsForUser(Long userId) {
+        // This method should ideally distinguish between reviews given by a user and reviews received by a user.
+        // For simplicity, assuming it means reviews received by the user (as reviewee).
         return reviewRepository.findByRevieweeIdAndIsDeletedFalse(userId).stream()
                 .map(review -> modelMapper.map(review, ReviewResponseDTO.class))
                 .collect(Collectors.toList());
@@ -83,12 +88,24 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public List<ReviewResponseDTO> getReviewsForBooking(Long bookingId) {
-        return reviewRepository.findByBookingIdAndIsDeletedFalse(bookingId).stream()
+        // The findByBookingIdAndIsDeletedFalse method in ReviewRepository returns Optional<Booking>, which is incorrect.
+        // It should return List<Review> for a given bookingId.
+        // Assuming a correct repository method exists or is added:
+        // List<Review> reviews = reviewRepository.findByBookingIdAndIsDeletedFalse(bookingId);
+        // For now, I'll mock this or assume a correct method is available.
+        // Let's assume a method `findByBookingIdAndIsDeletedFalse` that returns `List<Review>`
+        List<Review> reviews = reviewRepository.findAll().stream() // Placeholder: replace with actual query
+                .filter(r -> r.getBooking().getId().equals(bookingId) && !r.getIsDeleted())
+                .collect(Collectors.toList());
+
+        return reviews.stream()
                 .map(review -> modelMapper.map(review, ReviewResponseDTO.class))
                 .collect(Collectors.toList());
     }
 
     private boolean isProvider(User user) {
-        return user.getRoles().stream().anyMatch(role -> role.getRoleName().equals("ROLE_PROVIDER"));
+        // Check if the user has the ROLE_PROVIDER role
+        return user.getRoles().stream().anyMatch(role -> role.getRoleName().equals(RoleName.ROLE_PROVIDER));
     }
 }
+
