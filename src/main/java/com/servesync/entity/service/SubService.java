@@ -22,7 +22,7 @@ public class SubService extends BaseEntityWithId {
 
     private String description;
 
-    @Column(name = "base_price", nullable = false)
+    @Column(name = "base_price")
     private Double basePrice;
 
     @Column(name = "is_active", nullable = false)
