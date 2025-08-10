@@ -6,11 +6,18 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * DTO for creating or updating an Order.
+ * Fields here are primarily IDs and basic values — entities are resolved in the service layer.
+ */
 @Data
 public class OrderRequestDTO {
 
-    @NotNull(message = "User ID is required")
-    private Long userId;
+    @NotNull(message = "Customer ID is required")
+    private Long customerId;
+
+    @NotNull(message = "Provider ID is required")
+    private Long providerId;
 
     @NotNull(message = "Provider service offer ID is required")
     private Long providerServiceOfferId;
@@ -19,7 +26,7 @@ public class OrderRequestDTO {
     private Long serviceAddressId;
 
     @NotNull(message = "Scheduled start is required")
-    @FutureOrPresent(message = "Scheduled start time must be in the present or future")
+    @FutureOrPresent(message = "Scheduled start time must be now or in the future")
     private LocalDateTime scheduledStart;
 
     @NotNull(message = "Scheduled end is required")
@@ -36,5 +43,6 @@ public class OrderRequestDTO {
     @DecimalMin(value = "0.0", message = "Cancellation fee cannot be negative")
     private BigDecimal cancellationFee = BigDecimal.ZERO;
 
+    @Size(max = 500, message = "Special requests cannot exceed 500 characters")
     private String specialRequests;
 }

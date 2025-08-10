@@ -4,6 +4,7 @@ import com.servesync.dto.order.OrderRequestDTO;
 import com.servesync.dto.order.OrderResponseDTO;
 import com.servesync.entity.address.Address;
 import com.servesync.entity.order.Order;
+import com.servesync.entity.provider.Provider;
 import com.servesync.entity.provider.ProviderServiceOffer;
 import com.servesync.entity.user.User;
 import com.servesync.enums.OrderStatusEnum;
@@ -12,19 +13,20 @@ import com.servesync.exception.ApiException;
 import com.servesync.exception.ResourceNotFoundException;
 import com.servesync.repository.address.AddressRepository;
 import com.servesync.repository.order.OrderRepository;
+import com.servesync.repository.provider.ProviderRepository;
 import com.servesync.repository.provider.ProviderServiceOfferRepository;
 import com.servesync.repository.user.UserRepository;
 import com.servesync.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper; // Import ModelMapper
-import org.modelmapper.PropertyMap; // Import PropertyMap
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl; // Import PageImpl
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,183 +39,159 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final ProviderRepository providerRepository;
     private final ProviderServiceOfferRepository providerServiceOfferRepository;
     private final AddressRepository addressRepository;
-    private final ModelMapper modelMapper; // Injected ModelMapper
     private final SecurityUtils securityUtils;
+    private final ModelMapper modelMapper;
 
+    // ---------------------- Core CRUD ----------------------
     @Override
     public OrderResponseDTO createOrder(OrderRequestDTO dto) {
-        User customer = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + dto.getUserId()));
+        User customer = getUser(dto.getCustomerId(), "Customer");
+        ProviderServiceOffer offer = getProviderServiceOffer(dto.getProviderServiceOfferId());
+        Address address = getAddress(dto.getServiceAddressId());
 
-        ProviderServiceOffer providerServiceOffer = providerServiceOfferRepository.findById(dto.getProviderServiceOfferId())
-                .orElseThrow(() -> new ResourceNotFoundException("Provider Service Offer not found with ID: " + dto.getProviderServiceOfferId()));
-
-        Address serviceAddress = addressRepository.findById(dto.getServiceAddressId())
-                .orElseThrow(() -> new ResourceNotFoundException("Service Address not found with ID: " + dto.getServiceAddressId()));
-
-        // Basic validation: ensure address belongs to customer
-        if (!serviceAddress.getUser().getId().equals(customer.getId())) {
+        if (!address.getUser().getId().equals(customer.getId())) {
             throw new ApiException("Service address does not belong to the specified customer.");
         }
 
-        Order order = modelMapper.map(dto, Order.class); // Use ModelMapper
+        Order order = modelMapper.map(dto, Order.class);
         order.setCustomer(customer);
-        order.setProviderServiceOffer(providerServiceOffer);
-        order.setServiceAddress(serviceAddress);
-        order.setStatus(OrderStatusEnum.PENDING); // Initial status
+        order.setProviderServiceOffer(offer);
+        order.setServiceAddress(address);
+        order.setStatus(OrderStatusEnum.PENDING);
 
-        Order savedOrder = orderRepository.save(order);
-        log.info("Order created with ID: {}", savedOrder.getId());
-        return modelMapper.map(savedOrder, OrderResponseDTO.class); // Use ModelMapper
+        Order saved = orderRepository.save(order);
+        log.info("Order created with ID: {}", saved.getId());
+        return modelMapper.map(saved, OrderResponseDTO.class);
     }
 
     @Override
     public OrderResponseDTO getOrderById(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + id));
-        return modelMapper.map(order, OrderResponseDTO.class); // Use ModelMapper
+        return modelMapper.map(getOrder(id), OrderResponseDTO.class);
     }
 
     @Override
     public OrderResponseDTO updateOrder(Long id, OrderRequestDTO dto) {
-        Order existingOrder = orderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + id));
+        Order existing = getOrder(id);
 
-        // Only allow updates if order is PENDING or CONFIRMED
-        if (existingOrder.getStatus() != OrderStatusEnum.PENDING && existingOrder.getStatus() != OrderStatusEnum.CONFIRMED) {
-            throw new ApiException("Cannot update order in current status: " + existingOrder.getStatus());
+        if (!(existing.getStatus() == OrderStatusEnum.PENDING || existing.getStatus() == OrderStatusEnum.CONFIRMED)) {
+            throw new ApiException("Cannot update order in current status: " + existing.getStatus());
         }
 
-        modelMapper.map(dto, existingOrder); // Use ModelMapper for update
+        modelMapper.map(dto, existing);
+        existing.setCustomer(getUser(dto.getCustomerId(), "Customer"));
+        existing.setProviderServiceOffer(getProviderServiceOffer(dto.getProviderServiceOfferId()));
+        existing.setServiceAddress(getAddress(dto.getServiceAddressId()));
 
-        // Re-fetch related entities if IDs changed (though typically not allowed for existing orders)
-        if (!existingOrder.getCustomer().getId().equals(dto.getUserId())) {
-            User newCustomer = userRepository.findById(dto.getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("New customer not found with ID: " + dto.getUserId()));
-            existingOrder.setCustomer(newCustomer);
-        }
-        if (!existingOrder.getProviderServiceOffer().getId().equals(dto.getProviderServiceOfferId())) {
-            ProviderServiceOffer newProviderServiceOffer = providerServiceOfferRepository.findById(dto.getProviderServiceOfferId())
-                    .orElseThrow(() -> new ResourceNotFoundException("New Provider Service Offer not found with ID: " + dto.getProviderServiceOfferId()));
-            existingOrder.setProviderServiceOffer(newProviderServiceOffer);
-        }
-        if (!existingOrder.getServiceAddress().getId().equals(dto.getServiceAddressId())) {
-            Address newServiceAddress = addressRepository.findById(dto.getServiceAddressId())
-                    .orElseThrow(() -> new ResourceNotFoundException("New Service Address not found with ID: " + dto.getServiceAddressId()));
-            existingOrder.setServiceAddress(newServiceAddress);
-        }
-
-        Order updatedOrder = orderRepository.save(existingOrder);
-        log.info("Order updated with ID: {}", updatedOrder.getId());
-        return modelMapper.map(updatedOrder, OrderResponseDTO.class); // Use ModelMapper
+        Order updated = orderRepository.save(existing);
+        log.info("Order updated with ID: {}", updated.getId());
+        return modelMapper.map(updated, OrderResponseDTO.class);
     }
 
     @Override
     public void deleteOrder(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + id));
-        order.setIsDeleted(true); // Soft delete
+        Order order = getOrder(id);
+        order.setIsDeleted(true);
         orderRepository.save(order);
         log.info("Order soft-deleted with ID: {}", id);
     }
 
+    // ---------------------- Status Management ----------------------
     @Override
-    public OrderResponseDTO updateOrderStatus(Long orderId, OrderStatusEnum newStatus) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
-
-        // State machine for status transitions
-        switch (order.getStatus()) {
-            case PENDING:
-                if (newStatus == OrderStatusEnum.CONFIRMED || newStatus == OrderStatusEnum.REJECTED || newStatus == OrderStatusEnum.CANCELLED) {
-                    order.setStatus(newStatus);
-                } else {
-                    throw new ApiException("Invalid status transition from PENDING to " + newStatus);
-                }
-                break;
-            case CONFIRMED:
-                if (newStatus == OrderStatusEnum.IN_PROGRESS || newStatus == OrderStatusEnum.CANCELLED) {
-                    order.setStatus(newStatus);
-                    if (newStatus == OrderStatusEnum.IN_PROGRESS) {
-                        order.setActualStart(LocalDateTime.now());
-                    }
-                } else {
-                    throw new ApiException("Invalid status transition from CONFIRMED to " + newStatus);
-                }
-                break;
-            case IN_PROGRESS:
-                if (newStatus == OrderStatusEnum.COMPLETED || newStatus == OrderStatusEnum.CANCELLED) {
-                    order.setStatus(newStatus);
-                    if (newStatus == OrderStatusEnum.COMPLETED) {
-                        order.setActualEnd(LocalDateTime.now());
-                        // TODO: Trigger earning creation for provider
-                    }
-                } else {
-                    throw new ApiException("Invalid status transition from IN_PROGRESS to " + newStatus);
-                }
-                break;
-            case COMPLETED:
-            case CANCELLED:
-            case REJECTED:
-                throw new ApiException("Cannot change status of a " + order.getStatus() + " order.");
-            default:
-                throw new ApiException("Unknown order status.");
-        }
-
-        Order updatedOrder = orderRepository.save(order);
-        log.info("Order ID {} status updated to {}", orderId, newStatus);
-        return modelMapper.map(updatedOrder, OrderResponseDTO.class); // Use ModelMapper
+    public OrderResponseDTO updateOrderStatus(Long orderId, OrderStatusEnum status) {
+        Order order = getOrder(orderId);
+        validateStatusTransition(order.getStatus(), status);
+        applyStatusChange(order, status);
+        return modelMapper.map(orderRepository.save(order), OrderResponseDTO.class);
     }
 
+    // ---------------------- Provider Actions ----------------------
+    @Override
+    public OrderResponseDTO acceptOrder(@Min(1) Long orderId) {
+        return updateOrderStatus(orderId, OrderStatusEnum.CONFIRMED);
+    }
+
+    @Override
+    public OrderResponseDTO rejectOrder(@Min(1) Long orderId, String reason) {
+        log.info("Order {} rejected with reason: {}", orderId, reason);
+        return updateOrderStatus(orderId, OrderStatusEnum.REJECTED);
+    }
+
+    @Override
+    public OrderResponseDTO markOrderInProgress(@Min(1) Long orderId) {
+        return updateOrderStatus(orderId, OrderStatusEnum.IN_PROGRESS);
+    }
+
+    @Override
+    public OrderResponseDTO markOrderCompleted(@Min(1) Long orderId) {
+        return updateOrderStatus(orderId, OrderStatusEnum.COMPLETED);
+    }
+
+    // ---------------------- Customer Actions ----------------------
+    @Override
+    public OrderResponseDTO cancelOrderByCustomer(@Min(1) Long orderId, String reason) {
+        log.info("Customer canceled order {} with reason: {}", orderId, reason);
+        return updateOrderStatus(orderId, OrderStatusEnum.CANCELLED);
+    }
+
+    @Override
+    public OrderResponseDTO requestOrderModification(@Min(1) Long orderId, OrderRequestDTO dto) {
+        return updateOrder(orderId, dto);
+    }
+
+    // ---------------------- Admin Actions ----------------------
+    @Override
+    public OrderResponseDTO reassignOrder(@Min(1) Long orderId, Long newProviderId) {
+        Order order = getOrder(orderId);
+        Provider provider = providerRepository.findById(newProviderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Provider not found with ID: " + newProviderId));
+
+        order.getProviderServiceOffer().setProvider(provider);
+        log.info("Order {} reassigned to provider {}", orderId, newProviderId);
+        return modelMapper.map(orderRepository.save(order), OrderResponseDTO.class);
+    }
+
+    @Override
+    public void forceCancelOrder(@Min(1) Long orderId, String reason) {
+        log.warn("Order {} force-canceled by admin. Reason: {}", orderId, reason);
+        updateOrderStatus(orderId, OrderStatusEnum.CANCELLED);
+    }
+
+    // ---------------------- Retrieval Queries ----------------------
     @Override
     public Page<OrderResponseDTO> getOrdersByProvider(Long providerId, OrderStatusEnum status, Pageable pageable) {
-        Page<Order> orders = orderRepository.findByProviderIdAndStatus(providerId, status, pageable);
-        List<OrderResponseDTO> dtoList = orders.getContent().stream()
-                .map(order -> modelMapper.map(order, OrderResponseDTO.class))
-                .collect(Collectors.toList());
-        return new PageImpl<>(dtoList, pageable, orders.getTotalElements());
+        Page<Order> orders;
+        if (status != null) {
+            orders = orderRepository.findByProviderIdAndStatus(providerId, status, pageable);
+        } else {
+            orders = orderRepository.findByProviderId(providerId, pageable);
+        }
+        return toPage(orders, pageable);
     }
+
 
     @Override
     public Page<OrderResponseDTO> getOrdersByCustomer(Long customerId, OrderStatusEnum status, Pageable pageable) {
-        Page<Order> orders = orderRepository.findByCustomerIdAndStatus(customerId, status, pageable);
-        List<OrderResponseDTO> dtoList = orders.getContent().stream()
-                .map(order -> modelMapper.map(order, OrderResponseDTO.class))
-                .collect(Collectors.toList());
-        return new PageImpl<>(dtoList, pageable, orders.getTotalElements());
+        return toPage(orderRepository.findByCustomerIdAndStatus(customerId, status, pageable), pageable);
     }
 
-    // Security Helper Methods
+    @Override
+    public Page<OrderResponseDTO> searchOrders(String keyword, OrderStatusEnum status, Pageable pageable) {
+        return toPage(orderRepository.searchOrders(keyword, status, pageable), pageable);
+    }
+
+    @Override
+    public Page<OrderResponseDTO> getAllOrders(OrderStatusEnum status, Pageable pageable) {
+        return toPage(orderRepository.findAllByStatus(status, pageable), pageable);
+    }
+
+
+    // ---------------------- Security Helpers ----------------------
     @Override
     public boolean isOrderAccessible(Long orderId) {
-        Long currentUserId = securityUtils.getCurrentUserId();
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Current user not found."));
-
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
-
-        // Admin can access any order
-        if (currentUser.getRoleNames().contains(RoleName.ROLE_ADMIN.name())) {
-            return true;
-        }
-        // Customer can access their own orders
-        if (currentUser.getRoleNames().contains(RoleName.ROLE_CUSTOMER.name()) && order.getCustomer().getId().equals(currentUserId)) {
-            return true;
-        }
-        // Provider can access orders assigned to them
-        if (currentUser.getRoleNames().contains(RoleName.ROLE_PROVIDER.name())) {
-            try {
-                Long currentProviderId = securityUtils.getCurrentProviderId();
-                return order.getProviderServiceOffer().getProvider().getId().equals(currentProviderId);
-            } catch (ResourceNotFoundException e) {
-                // User is a provider role but no provider profile found, deny access
-                return false;
-            }
-        }
-        return false;
+        return checkAccess(orderId);
     }
 
     @Override
@@ -224,47 +202,106 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public boolean canUpdateOrderStatus(Long orderId, OrderStatusEnum newStatus) {
-        Long currentUserId = securityUtils.getCurrentUserId();
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Current user not found."));
+        return checkStatusPermission(orderId, newStatus);
+    }
 
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
+    // ---------------------- Private Helpers ----------------------
+    private Order getOrder(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + id));
+    }
 
-        // Admin can update any status
-        if (currentUser.getRoleNames().contains(RoleName.ROLE_ADMIN.name())) {
-            return true;
-        }
+    private User getUser(Long id, String roleName) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(roleName + " not found with ID: " + id));
+    }
 
-        // Customer can only cancel their own PENDING/CONFIRMED orders
-        if (currentUser.getRoleNames().contains(RoleName.ROLE_CUSTOMER.name())) {
-            if (order.getCustomer().getId().equals(currentUserId) && newStatus == OrderStatusEnum.CANCELLED) {
-                return order.getStatus() == OrderStatusEnum.PENDING || order.getStatus() == OrderStatusEnum.CONFIRMED;
+    private ProviderServiceOffer getProviderServiceOffer(Long id) {
+        return providerServiceOfferRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Provider Service Offer not found with ID: " + id));
+    }
+
+    private Address getAddress(Long id) {
+        return addressRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Service Address not found with ID: " + id));
+    }
+
+    private void validateStatusTransition(OrderStatusEnum current, OrderStatusEnum target) {
+        switch (current) {
+            case PENDING -> {
+                if (!(target == OrderStatusEnum.CONFIRMED || target == OrderStatusEnum.REJECTED || target == OrderStatusEnum.CANCELLED)) {
+                    throw new ApiException("Invalid transition from PENDING to " + target);
+                }
             }
-            return false;
+            case CONFIRMED -> {
+                if (target == OrderStatusEnum.IN_PROGRESS) return;
+                if (target == OrderStatusEnum.CANCELLED) return;
+                throw new ApiException("Invalid transition from CONFIRMED to " + target);
+            }
+            case IN_PROGRESS -> {
+                if (target == OrderStatusEnum.COMPLETED || target == OrderStatusEnum.CANCELLED) return;
+                throw new ApiException("Invalid transition from IN_PROGRESS to " + target);
+            }
+            default -> throw new ApiException("Order in status " + current + " cannot be changed.");
         }
+    }
 
-        // Provider can update status of their assigned orders
+    private void applyStatusChange(Order order, OrderStatusEnum newStatus) {
+        order.setStatus(newStatus);
+        if (newStatus == OrderStatusEnum.IN_PROGRESS) order.setActualStart(LocalDateTime.now());
+        if (newStatus == OrderStatusEnum.COMPLETED) order.setActualEnd(LocalDateTime.now());
+    }
+
+    private Page<OrderResponseDTO> toPage(Page<Order> orders, Pageable pageable) {
+        return new PageImpl<>(
+                orders.stream().map(o -> modelMapper.map(o, OrderResponseDTO.class)).collect(Collectors.toList()),
+                pageable,
+                orders.getTotalElements()
+        );
+    }
+
+    private boolean checkAccess(Long orderId) {
+        Long currentUserId = securityUtils.getCurrentUserId();
+        User currentUser = getUser(currentUserId, "Current user");
+        Order order = getOrder(orderId);
+
+        if (currentUser.getRoleNames().contains(RoleName.ROLE_ADMIN.name())) return true;
+        if (currentUser.getRoleNames().contains(RoleName.ROLE_CUSTOMER.name()) &&
+                order.getCustomer().getId().equals(currentUserId)) return true;
         if (currentUser.getRoleNames().contains(RoleName.ROLE_PROVIDER.name())) {
             try {
                 Long currentProviderId = securityUtils.getCurrentProviderId();
-                if (!order.getProviderServiceOffer().getProvider().getId().equals(currentProviderId)) {
-                    return false; // Not their order
-                }
-
-                // Provider specific transitions
-                switch (order.getStatus()) {
-                    case PENDING:
-                        return newStatus == OrderStatusEnum.CONFIRMED || newStatus == OrderStatusEnum.REJECTED;
-                    case CONFIRMED:
-                        return newStatus == OrderStatusEnum.IN_PROGRESS || newStatus == OrderStatusEnum.CANCELLED;
-                    case IN_PROGRESS:
-                        return newStatus == OrderStatusEnum.COMPLETED || newStatus == OrderStatusEnum.CANCELLED;
-                    default:
-                        return false; // Cannot change status of COMPLETED, CANCELLED, REJECTED orders
-                }
+                return order.getProviderServiceOffer().getProvider().getId().equals(currentProviderId);
             } catch (ResourceNotFoundException e) {
-                return false; // User is provider role but no provider profile found
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkStatusPermission(Long orderId, OrderStatusEnum newStatus) {
+        Long currentUserId = securityUtils.getCurrentUserId();
+        User currentUser = getUser(currentUserId, "Current user");
+        Order order = getOrder(orderId);
+
+        if (currentUser.getRoleNames().contains(RoleName.ROLE_ADMIN.name())) return true;
+        if (currentUser.getRoleNames().contains(RoleName.ROLE_CUSTOMER.name())) {
+            return order.getCustomer().getId().equals(currentUserId) &&
+                    newStatus == OrderStatusEnum.CANCELLED &&
+                    (order.getStatus() == OrderStatusEnum.PENDING || order.getStatus() == OrderStatusEnum.CONFIRMED);
+        }
+        if (currentUser.getRoleNames().contains(RoleName.ROLE_PROVIDER.name())) {
+            try {
+                Long providerId = securityUtils.getCurrentProviderId();
+                if (!order.getProviderServiceOffer().getProvider().getId().equals(providerId)) return false;
+                return switch (order.getStatus()) {
+                    case PENDING -> newStatus == OrderStatusEnum.CONFIRMED || newStatus == OrderStatusEnum.REJECTED;
+                    case CONFIRMED -> newStatus == OrderStatusEnum.IN_PROGRESS || newStatus == OrderStatusEnum.CANCELLED;
+                    case IN_PROGRESS -> newStatus == OrderStatusEnum.COMPLETED || newStatus == OrderStatusEnum.CANCELLED;
+                    default -> false;
+                };
+            } catch (ResourceNotFoundException e) {
+                return false;
             }
         }
         return false;

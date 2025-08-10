@@ -1,15 +1,12 @@
 package com.servesync.repository.service;
 
-import java.util.List;
-import java.util.Optional;
-
+import com.servesync.entity.service.SubService;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.servesync.entity.service.SubService;
+import java.util.List;
 
 public interface SubServiceRepository extends JpaRepository<SubService, Long> {
 
-	 Optional<SubService> findById(Long id);
-	 List<SubService> findAll();
+    List<SubService> findByServiceId(Long serviceId);
 
 }

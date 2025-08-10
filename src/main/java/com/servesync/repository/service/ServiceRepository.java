@@ -1,10 +1,14 @@
 package com.servesync.repository.service;
-import com.servesync.entity.service.Service;
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ServiceRepository extends JpaRepository<Service, Long>{
-	boolean existsByServiceName(String serviceName);
-    Optional<Service> findByServiceName(String serviceName);
+import com.servesync.entity.service.Service;
+
+public interface ServiceRepository extends JpaRepository<Service, Long> {
+
+	Optional<Service> findByServiceName(String serviceName);
+	List<Service> findByIsActiveTrue();
+	
 }

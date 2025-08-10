@@ -22,6 +22,10 @@ public class Service extends BaseEntityWithId {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+    
+    @Lob
+    @Column(name = "image_data", columnDefinition = "LONGBLOB")
+    private byte[] imageData;
 
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SubService> subServices = new HashSet<>();
